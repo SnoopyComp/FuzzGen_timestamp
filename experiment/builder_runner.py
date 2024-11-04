@@ -782,6 +782,58 @@ class BuilderRunner:
 
     return local_textcov, coverage_summary
 
+  def add_timestamp(self,
+                    generated_oss_fuzz_project: str,
+                    target_path: str,):
+    fs = self.benchmark.function_signature.split("::")[-1]
+    fs = fs[:fs.find("(")]
+    logger.info(f"add_timestamp function has start-> {fs}, {generated_oss_fuzz_project} at {target_path}")
+    lines = list()
+    isMain = False
+    get_function = False
+    with open(target_path, 'r') as fn:
+      lines = fn.readlines()
+    
+    sentence = "\n".join(lines)
+
+    if "#include <chrono>" in sentence:
+      return
+    
+    for i in range(len(lines)):
+      if("std::cout" in lines[i]):
+        lines[i] = ""
+    
+    for i in range(len(lines)):
+      if("#include <" in lines[i]):
+        lines.insert(i+1, "#include <chrono>\n#ifndef iostream\n#include <iostream>\n#endif\n")
+        break
+    for i in range(len(lines)):
+      if(isMain and fs in lines[i].split('//')[0]):
+        while(1):
+          if ";" or "return " in lines[i].split('//')[0] :
+            break
+          i += 1
+        lines.insert(i+1, '\tauto end_func = std::chrono::high_resolution_clock::now();\n')
+        lines.insert(i, '\tauto start_func = std::chrono::high_resolution_clock::now();\n')
+        get_function = True
+        break
+      elif ("LLVMFuzzerTestOneInput" in lines[i].split('//')[0]):
+        lines.insert(i+1, 'auto start_target = std::chrono::high_resolution_clock::now();\n')
+        isMain = True
+    for i in range(len(lines) - 1, -1, -1):
+        if ("return 0" in lines[i]):
+            lines.insert(i - 1, 'std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;\n')
+            lines.insert(i - 1, 'auto end_target = std::chrono::high_resolution_clock::now();\n')
+            break
+    if(get_function):
+      with open(target_path, 'w') as fn:
+        fn.write("".join(lines))
+    lines2 = list()
+    with open(target_path, 'r') as fn2:
+      lines2 = fn2.readlines()
+    for i in range (len(lines2)):
+      logger.info(f'{lines2[i]}')
+
 
 class CloudBuilderRunner(BuilderRunner):
   """Cloud BuilderRunner."""

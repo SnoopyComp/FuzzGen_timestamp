@@ -43,7 +43,7 @@ from utils import retryable
 logger = logging.getLogger(__name__)
 
 # Model hyper-parameters.
-MAX_TOKENS: int = 2000
+MAX_TOKENS: int = 20000
 NUM_SAMPLES: int = 1
 TEMPERATURE: float = 0.4
 

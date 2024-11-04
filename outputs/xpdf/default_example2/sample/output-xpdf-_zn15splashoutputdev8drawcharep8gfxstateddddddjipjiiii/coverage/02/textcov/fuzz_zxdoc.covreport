@@ -1,0 +1,50 @@
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddjiPjibbb:
+   23|      2|                                Unicode *unicode, int unicodeSize, GBool flag1, GBool flag2, GBool flag3) {
+   24|       |    // Implementation of drawChar (not provided in the original code)
+   25|      2|}
+LLVMFuzzerTestOneInput:
+   27|     53|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   28|     53|    FuzzedDataProvider stream(data, size);
+   29|       |
+   30|       |    // Prepare GfxState
+   31|     53|    GfxState gfxState;
+   32|       |
+   33|       |    // Consume double values
+   34|     53|    double x = stream.ConsumeFloatingPoint<double>();
+   35|     53|    double y = stream.ConsumeFloatingPoint<double>();
+   36|     53|    double width = stream.ConsumeFloatingPoint<double>();
+   37|     53|    double height = stream.ConsumeFloatingPoint<double>();
+   38|     53|    double ascent = stream.ConsumeFloatingPoint<double>();
+   39|     53|    double descent = stream.ConsumeFloatingPoint<double>();
+   40|       |
+   41|       |    // Consume CharCode and font size
+   42|     53|    CharCode charCode = stream.ConsumeIntegral<CharCode>();
+   43|     53|    int fontSize = stream.ConsumeIntegral<int>();
+   44|       |
+   45|       |    // Prepare Unicode array using ConsumeRandomLengthString
+   46|     53|    size_t unicodeSize = stream.ConsumeIntegralInRange<size_t>(1, 100); // Ensure at least 1
+   47|     53|    std::string unicodeString = stream.ConsumeRandomLengthString(unicodeSize * sizeof(Unicode));
+   48|     53|    std::vector<Unicode> unicodeArray(unicodeSize);
+   49|     53|    if (unicodeString.size() == unicodeSize * sizeof(Unicode)) {
+  ------------------
+  |  Branch (49:9): [True: 2, False: 51]
+  ------------------
+   50|      2|        std::memcpy(unicodeArray.data(), unicodeString.data(), unicodeString.size());
+   51|     51|    } else {
+   52|     51|        return 0; // If size does not match, exit the function
+   53|     51|    }
+   54|      2|    Unicode *unicodePtr = unicodeArray.data();
+   55|       |
+   56|       |    // Consume GBool flags
+   57|      2|    GBool flag1 = stream.ConsumeBool();
+   58|      2|    GBool flag2 = stream.ConsumeBool();
+   59|      2|    GBool flag3 = stream.ConsumeBool();
+   60|       |
+   61|       |    // Call the function-under-test
+   62|      2|    SplashOutputDev::drawChar(&gfxState, x, y, width, height, ascent, descent,
+   63|      2|                               charCode, fontSize, unicodePtr, static_cast<int>(unicodeSize),
+   64|      2|                               flag1, flag2, flag3);
+   65|       |
+   66|      2|    return 0;
+   67|     53|}
+

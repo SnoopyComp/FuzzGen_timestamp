@@ -1,0 +1,45 @@
+{
+    "samples": [
+
+    {
+        "benchmark": "output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate",
+        "sample": "01",
+        "status": "Done",
+        "compiles": "False",
+        "crashes": "False",
+        "crash_reason": "-",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "0.00",
+        "coverage_diff": "0.0",
+        "coverage_report": "#",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <cstdint>\\n#include <vector>\\n#include <cstring>\\n#include <algorithm> // For std::min\\n#include <string> // For std::string\\n#include <fuzzer/FuzzedDataProvider.h>\\n#include \"/src/xpdf-4.05/xpdf/SplashOutputDev.h\" // Include the correct header file for SplashOutputDev\\n\\nclass GfxState {\\npublic:\\n    // Assuming GfxState has some internal buffer or data structure\\n    // Here we define a constructor to initialize it with some data\\n    GfxState(size_t size) {\\n        buffer = new uint8_t[size];\\n        memset(buffer, 0, size); // Initialize with zeros\\n        bufferSize = size;\\n    }\\n\\n    ~GfxState() {\\n        delete[] buffer;\\n    }\\n\\n    uint8_t* getBuffer() {\\n        return buffer;\\n    }\\n\\n    size_t getSize() const {\\n        return bufferSize;\\n    }\\n\\nprivate:\\n    uint8_t* buffer;\\n    size_t bufferSize;\\n};\\n\\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\n    FuzzedDataProvider stream(data, size);\\n    \\n    // Create a GfxState object with a size derived from the fuzz input\\n    size_t gfxStateSize = stream.ConsumeIntegralInRange<size_t>(1, 1024); // Ensure size is not zero\\n    GfxState gfxState(gfxStateSize);\\n\\n    // Optionally, fill the GfxState buffer with fuzzed data\\n    std::string fuzzedData = stream.ConsumeRandomLengthString(); // Use ConsumeRandomLengthString for strings\\n    size_t dataSizeToCopy = std::min(gfxState.getSize(), fuzzedData.size());\\n\\n    // Validate the size of the fuzzed data\\n    if (dataSizeToCopy == 0) {\\n        return 0; // Do not proceed if there is no data to copy\\n    }\\n    \\n    memcpy(gfxState.getBuffer(), fuzzedData.data(), dataSizeToCopy);\\n\\n    // Call the function under test\\n    SplashOutputDev splashOutputDev;\\n    splashOutputDev.doUpdateFont(&gfxState);\\n\\n    return 0;\\n}",
+        "model": ""
+    },
+
+    {
+        "benchmark": "output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate",
+        "sample": "02",
+        "status": "Done",
+        "compiles": "True",
+        "crashes": "False",
+        "crash_reason": "NO_SEMANTIC_ERR",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "31.25",
+        "coverage_diff": "0.0",
+        "coverage_report": "/sample/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/coverage/02/linux/report.html",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <chrono>\\n#ifndef iostream\\n#include <iostream>\\n#endif\\n#include <cstdint>\\n#include <vector>\\n#include <cstdlib>\\n#include <cstring> // Added to include memcpy for initializing GfxState\\n\\nclass GfxState {\\npublic:\\n    int some_member; // Example member\\n    // Other members can be added as needed.\\n    \\n    // Constructor to initialize members\\n    GfxState() : some_member(0) {} // Initialize to default values\\n};\\n\\nclass SplashOutputDev {\\npublic:\\n    void doUpdateFont(GfxState *gfxState) {\\n        // Function implementation goes here.\\n        // For demonstration purposes, let's assume it modifies some_member.\\n        gfxState->some_member += 1; // Example operation\\n    }\\n};\\n\\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\nauto start_target = std::chrono::high_resolution_clock::now();\\n    // Initialize FuzzedDataProvider with the provided data and size.\\n    FuzzedDataProvider stream(data, size);\\n\\n    // Create an instance of SplashOutputDev.\\n    SplashOutputDev splashOutputDev;\\n\\n    // Initialize GfxState object.\\n    GfxState gfxState;\\n\\n    // Consume some data to initialize members of GfxState.\\n    gfxState.some_member = stream.ConsumeIntegral<int>();\\n\\n    // Call the function under test with the initial gfxState.\\n\tauto start_func = std::chrono::high_resolution_clock::now();\\n    splashOutputDev.doUpdateFont(&gfxState);\\n\tauto end_func = std::chrono::high_resolution_clock::now();\\n\\n    // Use a loop to create multiple GfxState instances with varying data.\\n    for (int i = 0; i < 10; ++i) {\\n        GfxState tempGfxState;\\n        // Consume different data for each instance to maximize coverage.\\n        tempGfxState.some_member = stream.ConsumeIntegral<int>();\\n        splashOutputDev.doUpdateFont(&tempGfxState);\\n    }\\n\\n    // Additionally, call doUpdateFont with modified gfxState to test state changes.\\n    for (int j = 0; j < 5; ++j) {\\n        gfxState.some_member = stream.ConsumeIntegral<int>();\\n        splashOutputDev.doUpdateFont(&gfxState);\\n    }\\nauto end_target = std::chrono::high_resolution_clock::now();\\nstd::cout<<\"Target runtime : \"<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<\", Function runtime : \"<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;\\n\\n    return 0;\\n}",
+        "model": ""
+    }
+
+    ]
+}

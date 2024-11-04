@@ -389,8 +389,21 @@ class Evaluator:
 
       gen_succ = build_result.succeeded and run_result and run_result.succeeded
       if gen_succ or llm_fix_count >= LLM_FIX_LIMIT:
-        # Exit cond 1: successfully generate the fuzz target.
-        # Exit cond 2: fix limit is reached.
+        if gen_succ:
+          llm_fix_count += 1
+          build_result = None
+          run_result = None
+          self.builder_runner.add_timestamp(generated_oss_fuzz_project, target_path)
+          shutil.copyfile(target_path,
+                          os.path.join(oss_fuzz_checkout.OSS_FUZZ_DIR, 'projects',
+                                      generated_oss_fuzz_project, os.path.basename(target_path)))
+          build_result, run_result = self.builder_runner.build_and_run(
+                generated_oss_fuzz_project, target_path, llm_fix_count,
+                self.benchmark.language)
+          # Exit cond 1: successfully generate the fuzz target.
+        else:
+          logger.info(f'fix count out : {generated_oss_fuzz_project} -> {target_path}')
+          # Exit cond 2: fix limit is reached.
         break
 
       # 2. Fixing generated driver. Skipped for jvm projects.

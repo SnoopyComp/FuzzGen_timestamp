@@ -1,0 +1,53 @@
+LLVMFuzzerTestOneInput:
+   22|     48|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   23|     48|    FuzzedDataProvider stream(data, size);
+   24|       |
+   25|       |    // Initialize GfxState
+   26|     48|    GfxState gfxState;
+   27|       |
+   28|       |    // Consume double values for x, y, width, height, ascent, descent
+   29|     48|    double x = stream.ConsumeFloatingPoint<double>();
+   30|     48|    double y = stream.ConsumeFloatingPoint<double>();
+   31|     48|    double width = stream.ConsumeFloatingPoint<double>();
+   32|     48|    double height = stream.ConsumeFloatingPoint<double>();
+   33|     48|    double ascent = stream.ConsumeFloatingPoint<double>();
+   34|     48|    double descent = stream.ConsumeFloatingPoint<double>();
+   35|       |
+   36|       |    // Consume CharCode and font size
+   37|     48|    CharCode charCode = stream.ConsumeIntegral<CharCode>();
+   38|     48|    int fontSize = stream.ConsumeIntegral<int>();
+   39|       |
+   40|       |    // Consume Unicode array
+   41|     48|    size_t unicodeCount = stream.ConsumeIntegralInRange<size_t>(1, 10); // Ensure at least 1 Unicode
+   42|     48|    std::string unicodeString = stream.ConsumeRandomLengthString(unicodeCount * sizeof(Unicode));
+   43|       |    
+   44|       |    // Validate the size of the consumed string
+   45|     48|    if (unicodeString.size() != unicodeCount * sizeof(Unicode)) {
+  ------------------
+  |  Branch (45:9): [True: 46, False: 2]
+  ------------------
+   46|     46|        return 0; // Skip this iteration if the size is not as expected
+   47|     46|    }
+   48|       |
+   49|      2|    std::vector<Unicode> unicodeArray(reinterpret_cast<Unicode*>(const_cast<char*>(unicodeString.data())), 
+   50|      2|                                       reinterpret_cast<Unicode*>(const_cast<char*>(unicodeString.data())) + unicodeCount);
+   51|      2|    Unicode *unicodePtr = unicodeArray.data();
+   52|       |
+   53|       |    // Consume GBool flags
+   54|      2|    GBool flag1 = stream.ConsumeBool();
+   55|      2|    GBool flag2 = stream.ConsumeBool();
+   56|      2|    GBool flag3 = stream.ConsumeBool();
+   57|       |
+   58|       |    // Call the function under test
+   59|      2|    SplashOutputDev splashOutputDev;
+   60|      2|    splashOutputDev.drawChar(&gfxState, x, y, width, height, ascent, descent,
+   61|      2|                              charCode, fontSize, unicodePtr, static_cast<int>(unicodeCount),
+   62|      2|                              flag1, flag2, flag3);
+   63|       |
+   64|      2|    return 0;
+   65|     48|}
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddjiPjibbb:
+   17|      2|                  Unicode *unicode, int unicodeCount, GBool flag1, GBool flag2, GBool flag3) {
+   18|       |        // Function implementation...
+   19|      2|    }
+

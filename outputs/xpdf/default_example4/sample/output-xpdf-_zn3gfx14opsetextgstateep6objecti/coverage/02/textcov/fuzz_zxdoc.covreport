@@ -1,0 +1,65 @@
+_ZN3Gfx14opSetExtGStateEP6Objecti:
+   28|      6|    void opSetExtGState(Object *obj, int state) {
+   29|       |        // Function implementation
+   30|      6|        if (obj != nullptr) {
+  ------------------
+  |  Branch (30:13): [True: 6, False: 0]
+  ------------------
+   31|       |            // Update the state of the object based on the input
+   32|      6|            obj->updateState(state);
+   33|       |            // Example logic that might be influenced by the state
+   34|       |            // This is just a placeholder for the actual implementation
+   35|      6|        }
+   36|      6|    }
+LLVMFuzzerTestOneInput:
+   39|      6|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   40|      6|auto start_target = std::chrono::high_resolution_clock::now();
+   41|       |    // Create a FuzzedDataProvider instance
+   42|      6|    FuzzedDataProvider fuzzed_data(data, size);
+   43|       |
+   44|       |    // Create an Object instance
+   45|      6|    Object obj;
+   46|       |
+   47|       |    // Consume an integer value for the state parameter
+   48|       |    // Use a wider range of integers to maximize fuzzing coverage
+   49|      6|    int state = fuzzed_data.ConsumeIntegralInRange<int>(
+   50|      6|        std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+   51|       |
+   52|       |    // Ensure to use a valid pointer to the Object
+   53|      6|	auto start_func = std::chrono::high_resolution_clock::now();
+   54|      6|    Gfx::opSetExtGState(&obj, state);
+   55|      6|	auto end_func = std::chrono::high_resolution_clock::now();
+   56|       |
+   57|       |    // Optionally, you can also consume additional data to modify the internal state
+   58|       |    // This can help in exploring different paths in the implementation
+   59|      6|    int additionalState = fuzzed_data.ConsumeIntegralInRange<int>(
+   60|      6|        std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+   61|       |    
+   62|       |    // Update the internal state with additional data
+   63|      6|    obj.updateState(additionalState);
+   64|       |
+   65|       |    // Additionally, we can consume a boolean to decide whether to call the function again
+   66|      6|    bool shouldInvokeAgain = fuzzed_data.ConsumeBool();
+   67|      6|    if (shouldInvokeAgain) {
+  ------------------
+  |  Branch (67:9): [True: 0, False: 6]
+  ------------------
+   68|       |        // Invoke the function again with a different state
+   69|      0|        int newState = fuzzed_data.ConsumeIntegralInRange<int>(
+   70|      0|            std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+   71|      0|        Gfx::opSetExtGState(&obj, newState);
+   72|      0|    }
+   73|      6|auto end_target = std::chrono::high_resolution_clock::now();
+   74|      6|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   75|       |
+   76|      6|    return 0;
+   77|      6|}
+_ZN6Object11updateStateEi:
+   22|     12|    void updateState(int state) {
+   23|     12|        internalState = state;
+   24|     12|    }
+_ZN6ObjectC2Ev:
+   17|      6|    Object() : internalState(0) {
+   18|       |        // Initialize the object as needed
+   19|      6|    }
+

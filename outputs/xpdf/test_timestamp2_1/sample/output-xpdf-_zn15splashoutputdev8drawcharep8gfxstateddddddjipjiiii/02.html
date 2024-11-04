@@ -1,0 +1,702 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experiment results</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    line-height: 1.15;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border-right: 1px #dedede solid;
+    border-bottom: 1px #dedede solid;
+    padding: 5px;
+    text-align: left;
+}
+td:first-child, th:first-child {
+    border-left: 1px #dedede solid;
+}
+th {
+    border-top: 1px #dedede solid;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f4f5ff;
+}
+
+.chat_prompt {
+    background-color: #fff7f2;
+    max-width: 50%;
+    overflow: scroll;
+}
+
+.chat_response {
+    background-color: #fcfff2;
+    max-width: 50%;
+    overflow: scroll;
+    margin-left: auto;
+}
+</style>
+<body>
+    LLM: 
+    
+<h1>output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii / 02</h1>
+Bug: False
+<br>
+Crash reason: -
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<h3>Final code</h3>
+
+<pre>
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;chrono&gt;
+#ifndef iostream
+#include &lt;iostream&gt;
+#endif
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;string&gt;
+
+// Assuming these are defined somewhere in the codebase
+class GfxState {};
+using CharCode = uint32_t; // Assuming CharCode is a typedef for uint32_t
+using Unicode = uint32_t; // Assuming Unicode is a typedef for uint32_t
+using GBool = int; // Assuming GBool is a typedef for int, where 0 is false and 1 is true
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *state, double x, double y, double width, double height,
+                  double x_offset, double y_offset, CharCode char_code, int font_size,
+                  Unicode *unicode_ptr, int unicode_count, GBool flag1, GBool flag2, GBool flag3) {
+        // Function implementation
+    }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+auto start_target = std::chrono::high_resolution_clock::now();
+    FuzzedDataProvider stream(data, size);
+
+    // Create a GfxState object
+    GfxState gfx_state;
+
+    // Consume doubles
+    double x = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double width = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double height = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double x_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+
+    // Consume CharCode
+    CharCode char_code = stream.ConsumeIntegral&lt;CharCode&gt;();
+
+    // Consume font size
+    int font_size = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Consume Unicode array
+    size_t unicode_count = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 100); // Ensure at least 1 Unicode
+    std::string unicode_string = stream.ConsumeRandomLengthString(unicode_count * sizeof(Unicode));
+    
+    // Ensure the size of the unicode_string is valid
+    if (unicode_string.size() != unicode_count * sizeof(Unicode)) {
+        return 0; // Invalid size, exit early
+    }
+    
+    // Convert string data to Unicode array
+    std::vector&lt;Unicode&gt; unicode_vec(unicode_count);
+    for (size_t i = 0; i &lt; unicode_count; ++i) {
+        unicode_vec[i] = static_cast&lt;Unicode&gt;(unicode_string[i % unicode_string.size()]); // Cast to Unicode
+    }
+    Unicode *unicode_ptr = unicode_vec.data(); // Pointer to the first element
+
+    // Consume GBool flags
+    GBool flag1 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag2 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splash_output_dev;
+	auto start_func = std::chrono::high_resolution_clock::now();
+    splash_output_dev.drawChar(&amp;gfx_state, x, y, width, height, x_offset, y_offset, 
+	auto end_func = std::chrono::high_resolution_clock::now();
+                                char_code, font_size, unicode_ptr, unicode_count, 
+                                flag1, flag2, flag3);
+auto end_target = std::chrono::high_resolution_clock::now();
+std::cout&lt;&lt;&#34;Target runtime : &#34;&lt;&lt;std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(end_target-start_target).count()&lt;&lt;&#34;, Function runtime : &#34;&lt;&lt;std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(end_func - start_func).count()&lt;&lt;std::endl;
+
+    return 0;
+}
+</pre>
+
+
+<h3>Fixer prompt #1</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+
+// Assuming these are defined somewhere in the codebase
+class GfxState {};
+using CharCode = uint32_t; // Assuming CharCode is a typedef for uint32_t
+using Unicode = uint32_t; // Assuming Unicode is a typedef for uint32_t
+using GBool = int; // Assuming GBool is a typedef for int, where 0 is false and 1 is true
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *state, double x, double y, double width, double height,
+                  double x_offset, double y_offset, CharCode char_code, int font_size,
+                  Unicode *unicode_ptr, int unicode_count, GBool flag1, GBool flag2, GBool flag3) {
+        // Function implementation
+    }
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create a GfxState object
+    GfxState gfx_state;
+
+    // Consume doubles
+    double x = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double width = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double height = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double x_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+
+    // Consume CharCode
+    CharCode char_code = stream.ConsumeIntegral&lt;CharCode&gt;();
+
+    // Consume font size
+    int font_size = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Consume Unicode array
+    size_t unicode_count = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 100); // Ensure at least 1 Unicode
+    std::vector&lt;Unicode&gt; unicode_vec = stream.ConsumeBytes&lt;Unicode&gt;(unicode_count * sizeof(Unicode));
+    Unicode *unicode_ptr = unicode_vec.data(); // Pointer to the first element
+
+    // Consume GBool flags
+    GBool flag1 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag2 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splash_output_dev;
+    splash_output_dev.drawChar(&amp;gfx_state, x, y, width, height, x_offset, y_offset, 
+                                char_code, font_size, unicode_ptr, unicode_count, 
+                                flag1, flag2, flag3);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+In file included from fuzz_zxdoc.cc:1:
+/usr/local/lib/clang/18/include/fuzzer/FuzzedDataProvider.h:353:17: error: static assertion failed due to requirement &#39;sizeof(unsigned int) == sizeof(unsigned char)&#39;: Incompatible data type.
+  353 |   static_assert(sizeof(T) == sizeof(uint8_t), &#34;Incompatible data type.&#34;);
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/local/lib/clang/18/include/fuzzer/FuzzedDataProvider.h:110:10: note: in instantiation of function template specialization &#39;FuzzedDataProvider::ConsumeBytes&lt;unsigned int&gt;&#39; requested here
+  110 |   return ConsumeBytes&lt;T&gt;(num_bytes, num_bytes);
+      |          ^
+fuzz_zxdoc.cc:42:47: note: in instantiation of function template specialization &#39;FuzzedDataProvider::ConsumeBytes&lt;unsigned int&gt;&#39; requested here
+   42 |     std::vector&lt;Unicode&gt; unicode_vec = stream.ConsumeBytes&lt;Unicode&gt;(unicode_count * sizeof(Unicode));
+      |                                               ^
+/usr/local/lib/clang/18/include/fuzzer/FuzzedDataProvider.h:353:27: note: expression evaluates to &#39;4 == 1&#39;
+  353 |   static_assert(sizeof(T) == sizeof(uint8_t), &#34;Incompatible data type.&#34;);
+      |                 ~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #1</h3>
+
+<pre>
+Here is the fixed code that addresses the build error by replacing the use of `ConsumeBytes` with `ConsumeRandomLengthString`, which is more appropriate for handling Unicode data. Additionally, it includes validation of the size of the vector returned. 
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;string&gt;
+
+// Assuming these are defined somewhere in the codebase
+class GfxState {};
+using CharCode = uint32_t; // Assuming CharCode is a typedef for uint32_t
+using Unicode = uint32_t; // Assuming Unicode is a typedef for uint32_t
+using GBool = int; // Assuming GBool is a typedef for int, where 0 is false and 1 is true
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *state, double x, double y, double width, double height,
+                  double x_offset, double y_offset, CharCode char_code, int font_size,
+                  Unicode *unicode_ptr, int unicode_count, GBool flag1, GBool flag2, GBool flag3) {
+        // Function implementation
+    }
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create a GfxState object
+    GfxState gfx_state;
+
+    // Consume doubles
+    double x = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double width = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double height = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double x_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+
+    // Consume CharCode
+    CharCode char_code = stream.ConsumeIntegral&lt;CharCode&gt;();
+
+    // Consume font size
+    int font_size = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Consume Unicode array
+    size_t unicode_count = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 100); // Ensure at least 1 Unicode
+    std::string unicode_string = stream.ConsumeRandomLengthString(unicode_count * sizeof(Unicode));
+    
+    // Ensure the size of the unicode_string is valid
+    if (unicode_string.size() != unicode_count * sizeof(Unicode)) {
+        return 0; // Invalid size, exit early
+    }
+    
+    // Convert string data to Unicode array
+    std::vector&lt;Unicode&gt; unicode_vec(unicode_count);
+    for (size_t i = 0; i &lt; unicode_count; ++i) {
+        unicode_vec[i] = static_cast&lt;Unicode&gt;(unicode_string[i % unicode_string.size()]); // Cast to Unicode
+    }
+    Unicode *unicode_ptr = unicode_vec.data(); // Pointer to the first element
+
+    // Consume GBool flags
+    GBool flag1 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag2 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splash_output_dev;
+    splash_output_dev.drawChar(&amp;gfx_state, x, y, width, height, x_offset, y_offset, 
+                                char_code, font_size, unicode_ptr, unicode_count, 
+                                flag1, flag2, flag3);
+
+    return 0;
+}
+```
+
+### Key Changes Made:
+1. **Changed `ConsumeBytes` to `ConsumeRandomLengthString`:** This is more appropriate for generating a string of characters that can be interpreted as Unicode values.
+2. **Validation of Unicode Size:** Added a check to ensure that the size of the `unicode_string` matches the expected size based on `unicode_count`.
+3. **Conversion of String to Unicode Array:** Converted the consumed string into a vector of `Unicode` values, ensuring that it fits the expected format for the `drawChar` function. 
+
+These changes should allow the code to compile successfully and maximize the fuzzing results by providing valid input to the function under test.
+</pre>
+
+
+<h3>Fixer prompt #2</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;string&gt;
+
+// Assuming these are defined somewhere in the codebase
+class GfxState {};
+using CharCode = uint32_t; // Assuming CharCode is a typedef for uint32_t
+using Unicode = uint32_t; // Assuming Unicode is a typedef for uint32_t
+using GBool = int; // Assuming GBool is a typedef for int, where 0 is false and 1 is true
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *state, double x, double y, double width, double height,
+                  double x_offset, double y_offset, CharCode char_code, int font_size,
+                  Unicode *unicode_ptr, int unicode_count, GBool flag1, GBool flag2, GBool flag3) {
+        // Function implementation
+    }
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create a GfxState object
+    GfxState gfx_state;
+
+    // Consume doubles
+    double x = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double width = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double height = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double x_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+
+    // Consume CharCode
+    CharCode char_code = stream.ConsumeIntegral&lt;CharCode&gt;();
+
+    // Consume font size
+    int font_size = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Consume Unicode array
+    size_t unicode_count = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 100); // Ensure at least 1 Unicode
+    std::string unicode_string = stream.ConsumeRandomLengthString(unicode_count * sizeof(Unicode));
+    
+    // Ensure the size of the unicode_string is valid
+    if (unicode_string.size() != unicode_count * sizeof(Unicode)) {
+        return 0; // Invalid size, exit early
+    }
+    
+    // Convert string data to Unicode array
+    std::vector&lt;Unicode&gt; unicode_vec(unicode_count);
+    for (size_t i = 0; i &lt; unicode_count; ++i) {
+        unicode_vec[i] = static_cast&lt;Unicode&gt;(unicode_string[i % unicode_string.size()]); // Cast to Unicode
+    }
+    Unicode *unicode_ptr = unicode_vec.data(); // Pointer to the first element
+
+    // Consume GBool flags
+    GBool flag1 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag2 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splash_output_dev;
+    splash_output_dev.drawChar(&amp;gfx_state, x, y, width, height, x_offset, y_offset, 
+                                char_code, font_size, unicode_ptr, unicode_count, 
+                                flag1, flag2, flag3);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+(.text.main+0x12): undefined reference to `LLVMFuzzerTestOneInput&#39;
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #2</h3>
+
+<pre>
+To address the build issue indicated by the error message &#34;undefined reference to `LLVMFuzzerTestOneInput`&#34;, we need to ensure that the function `LLVMFuzzerTestOneInput` is correctly defined and linked. The code provided appears to be complete for a fuzzing harness, but the error suggests that it may not be properly linked during the build process.
+
+Here&#39;s the complete code with no changes needed, as it is already structured correctly for fuzzing. However, I will ensure that the necessary libraries are included and provide a complete context for building the fuzzing target.
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;string&gt;
+
+// Assuming these are defined somewhere in the codebase
+class GfxState {};
+using CharCode = uint32_t; // Assuming CharCode is a typedef for uint32_t
+using Unicode = uint32_t; // Assuming Unicode is a typedef for uint32_t
+using GBool = int; // Assuming GBool is a typedef for int, where 0 is false and 1 is true
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *state, double x, double y, double width, double height,
+                  double x_offset, double y_offset, CharCode char_code, int font_size,
+                  Unicode *unicode_ptr, int unicode_count, GBool flag1, GBool flag2, GBool flag3) {
+        // Function implementation
+    }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create a GfxState object
+    GfxState gfx_state;
+
+    // Consume doubles
+    double x = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double width = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double height = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double x_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double y_offset = stream.ConsumeFloatingPoint&lt;double&gt;();
+
+    // Consume CharCode
+    CharCode char_code = stream.ConsumeIntegral&lt;CharCode&gt;();
+
+    // Consume font size
+    int font_size = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Consume Unicode array
+    size_t unicode_count = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 100); // Ensure at least 1 Unicode
+    std::string unicode_string = stream.ConsumeRandomLengthString(unicode_count * sizeof(Unicode));
+    
+    // Ensure the size of the unicode_string is valid
+    if (unicode_string.size() != unicode_count * sizeof(Unicode)) {
+        return 0; // Invalid size, exit early
+    }
+    
+    // Convert string data to Unicode array
+    std::vector&lt;Unicode&gt; unicode_vec(unicode_count);
+    for (size_t i = 0; i &lt; unicode_count; ++i) {
+        unicode_vec[i] = static_cast&lt;Unicode&gt;(unicode_string[i % unicode_string.size()]); // Cast to Unicode
+    }
+    Unicode *unicode_ptr = unicode_vec.data(); // Pointer to the first element
+
+    // Consume GBool flags
+    GBool flag1 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag2 = stream.ConsumeBool() ? 1 : 0;
+    GBool flag3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splash_output_dev;
+    splash_output_dev.drawChar(&amp;gfx_state, x, y, width, height, x_offset, y_offset, 
+                                char_code, font_size, unicode_ptr, unicode_count, 
+                                flag1, flag2, flag3);
+
+    return 0;
+}
+```
+
+### Explanation of Changes:
+1. **Extern &#34;C&#34; Declaration**: I added `extern &#34;C&#34;` before the `LLVMFuzzerTestOneInput` function definition to ensure that the function name is not mangled by C++ compilers, which is necessary for the fuzzing framework to link correctly.
+   
+### Build Instructions:
+To build this code for fuzzing, you can use a command like the following (assuming you have the necessary LLVM and libFuzzer setup):
+
+```bash
+clang++ -fsanitize=fuzzer -I/path/to/fuzzer -o fuzz_target fuzz_target.cpp
+```
+
+Make sure to replace `/path/to/fuzzer` with the actual path to the `FuzzedDataProvider.h` file if it&#39;s not in the standard include paths.
+</pre>
+
+
+<h2>Logs</h2>
+
+<pre >
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/test_timestamp2_1/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 1.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/test_timestamp2_1/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 2.
+Failed to build /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/test_timestamp2_1/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini in 3 iterations of fixing.
+
+</pre>
+
+
+<h2>Run logs</h2>
+<pre>
+INFO:__main__:Running: docker run --privileged --shm-size=2g --platform linux/amd64 --rm -e FUZZING_ENGINE=libfuzzer -e SANITIZER=address -e RUN_FUZZER_MODE=interactive -e HELPER=True -v /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/test_timestamp2_1/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/corpora/02.cc:/tmp/fuzz_zxdoc_corpus -v /tmp/tmp7m0bfal4/build/out/xpdf-zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii-02:/out -t gcr.io/oss-fuzz-base/base-runner run_fuzzer fuzz_zxdoc -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30.
+vm.mmap_rnd_bits = 28
+rm: cannot remove &#39;/tmp/fuzz_zxdoc_corpus&#39;: Device or resource busy
+/out/fuzz_zxdoc -rss_limit_mb=2560 -timeout=25 -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30 /tmp/fuzz_zxdoc_corpus &lt; /dev/null
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 2801186226
+INFO: Loaded 1 modules   (145 inline 8-bit counters): 145 [0x55afe83ec048, 0x55afe83ec0d9), 
+INFO: Loaded 1 PC tables (145 PCs): 145 [0x55afe83ec0e0,0x55afe83ec9f0), 
+INFO:        0 files found in /tmp/fuzz_zxdoc_corpus
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: A corpus is not provided, starting from an empty corpus
+#2	INITED cov: 29 ft: 30 corp: 1/1b exec/s: 0 rss: 30Mb
+#8	NEW    cov: 30 ft: 32 corp: 2/3b lim: 4096 exec/s: 0 rss: 31Mb L: 2/2 MS: 1 InsertByte-
+#9	NEW    cov: 30 ft: 34 corp: 3/6b lim: 4096 exec/s: 0 rss: 31Mb L: 3/3 MS: 1 InsertByte-
+#25	NEW    cov: 42 ft: 51 corp: 4/39b lim: 4096 exec/s: 0 rss: 31Mb L: 33/33 MS: 1 InsertRepeatedBytes-
+#33	NEW    cov: 42 ft: 53 corp: 5/44b lim: 4096 exec/s: 0 rss: 31Mb L: 5/33 MS: 3 ChangeBinInt-ShuffleBytes-CMP- DE: &#34;\001\000&#34;-
+#36	NEW    cov: 65 ft: 83 corp: 6/144b lim: 4096 exec/s: 0 rss: 31Mb L: 100/100 MS: 3 InsertByte-CopyPart-InsertRepeatedBytes-
+#42	NEW    cov: 65 ft: 84 corp: 7/175b lim: 4096 exec/s: 0 rss: 31Mb L: 31/100 MS: 1 InsertRepeatedBytes-
+#48	NEW    cov: 65 ft: 88 corp: 8/239b lim: 4096 exec/s: 0 rss: 32Mb L: 64/100 MS: 1 CrossOver-
+#49	NEW    cov: 65 ft: 89 corp: 9/243b lim: 4096 exec/s: 0 rss: 32Mb L: 4/100 MS: 1 InsertByte-
+#53	NEW    cov: 65 ft: 93 corp: 10/531b lim: 4096 exec/s: 0 rss: 32Mb L: 288/288 MS: 4 ChangeBinInt-InsertByte-CopyPart-InsertRepeatedBytes-
+#57	NEW    cov: 65 ft: 95 corp: 11/556b lim: 4096 exec/s: 0 rss: 32Mb L: 25/288 MS: 4 ShuffleBytes-PersAutoDict-CrossOver-EraseBytes- DE: &#34;\001\000&#34;-
+#67	NEW    cov: 65 ft: 99 corp: 12/893b lim: 4096 exec/s: 0 rss: 32Mb L: 337/337 MS: 5 PersAutoDict-InsertByte-ChangeBinInt-CrossOver-InsertRepeatedBytes- DE: &#34;\001\000&#34;-
+#73	NEW    cov: 65 ft: 103 corp: 13/958b lim: 4096 exec/s: 0 rss: 32Mb L: 65/337 MS: 1 InsertByte-
+#84	REDUCE cov: 65 ft: 103 corp: 13/957b lim: 4096 exec/s: 0 rss: 32Mb L: 32/337 MS: 1 EraseBytes-
+	NEW_FUNC[1/2]: 0x55afe834d880 in std::__1::vector&lt;unsigned int, std::__1::allocator&lt;unsigned int&gt;&gt;::vector(unsigned long) /usr/local/bin/../include/c++/v1/vector:1118
+	NEW_FUNC[2/2]: 0x55afe834dd80 in std::__1::vector&lt;unsigned int, std::__1::allocator&lt;unsigned int&gt;&gt;::__construct_at_end(unsigned long) /usr/local/bin/../include/c++/v1/vector:1053
+#85	NEW    cov: 87 ft: 130 corp: 14/1141b lim: 4096 exec/s: 0 rss: 32Mb L: 184/337 MS: 1 InsertRepeatedBytes-
+#89	NEW    cov: 90 ft: 133 corp: 15/1324b lim: 4096 exec/s: 0 rss: 32Mb L: 183/337 MS: 4 CrossOver-InsertByte-InsertRepeatedBytes-InsertRepeatedBytes-
+#95	NEW    cov: 90 ft: 136 corp: 16/1898b lim: 4096 exec/s: 0 rss: 32Mb L: 574/574 MS: 1 CopyPart-
+#116	NEW    cov: 90 ft: 140 corp: 17/1969b lim: 4096 exec/s: 0 rss: 32Mb L: 71/574 MS: 1 CopyPart-
+#125	REDUCE cov: 90 ft: 140 corp: 17/1902b lim: 4096 exec/s: 0 rss: 32Mb L: 507/507 MS: 4 ChangeBinInt-ChangeBit-CopyPart-EraseBytes-
+#146	NEW    cov: 90 ft: 142 corp: 18/1922b lim: 4096 exec/s: 0 rss: 32Mb L: 20/507 MS: 1 EraseBytes-
+#172	REDUCE cov: 90 ft: 142 corp: 18/1862b lim: 4096 exec/s: 0 rss: 32Mb L: 124/507 MS: 1 EraseBytes-
+#176	NEW    cov: 90 ft: 144 corp: 19/1921b lim: 4096 exec/s: 0 rss: 32Mb L: 59/507 MS: 4 ShuffleBytes-InsertByte-ChangeByte-EraseBytes-
+#177	REDUCE cov: 90 ft: 144 corp: 19/1919b lim: 4096 exec/s: 0 rss: 32Mb L: 23/507 MS: 1 EraseBytes-
+#189	NEW    cov: 90 ft: 146 corp: 20/1931b lim: 4096 exec/s: 0 rss: 32Mb L: 12/507 MS: 2 CMP-CopyPart- DE: &#34;\001\000&#34;-
+#207	NEW    cov: 90 ft: 148 corp: 21/1944b lim: 4096 exec/s: 0 rss: 32Mb L: 13/507 MS: 3 ChangeBinInt-CMP-InsertByte- DE: &#34;\001\000\000\000&#34;-
+#212	NEW    cov: 90 ft: 149 corp: 22/1959b lim: 4096 exec/s: 0 rss: 32Mb L: 15/507 MS: 5 PersAutoDict-ChangeByte-InsertByte-PersAutoDict-PersAutoDict- DE: &#34;\001\000\000\000&#34;-&#34;\001\000&#34;-&#34;\001\000&#34;-
+#219	REDUCE cov: 90 ft: 149 corp: 22/1936b lim: 4096 exec/s: 0 rss: 32Mb L: 160/507 MS: 2 ShuffleBytes-EraseBytes-
+#269	NEW    cov: 90 ft: 151 corp: 23/1996b lim: 4096 exec/s: 0 rss: 32Mb L: 60/507 MS: 5 CMP-ChangeBinInt-ChangeByte-PersAutoDict-InsertByte- DE: &#34;\377\377\377\377&#34;-&#34;\001\000\000\000&#34;-
+#294	NEW    cov: 90 ft: 153 corp: 24/2037b lim: 4096 exec/s: 0 rss: 32Mb L: 41/507 MS: 5 ChangeByte-InsertByte-InsertByte-ShuffleBytes-CMP- DE: &#34;\025\000\000\000\000\000\000\000&#34;-
+#331	NEW    cov: 90 ft: 155 corp: 25/2058b lim: 4096 exec/s: 0 rss: 32Mb L: 21/507 MS: 2 CMP-InsertByte- DE: &#34;\000\000&#34;-
+#386	NEW    cov: 90 ft: 156 corp: 26/2111b lim: 4096 exec/s: 0 rss: 33Mb L: 53/507 MS: 5 ChangeBinInt-InsertByte-InsertByte-InsertByte-CopyPart-
+#389	NEW    cov: 90 ft: 159 corp: 27/2194b lim: 4096 exec/s: 0 rss: 33Mb L: 83/507 MS: 3 EraseBytes-InsertRepeatedBytes-PersAutoDict- DE: &#34;\025\000\000\000\000\000\000\000&#34;-
+#402	NEW    cov: 90 ft: 161 corp: 28/2205b lim: 4096 exec/s: 0 rss: 33Mb L: 11/507 MS: 3 EraseBytes-ChangeByte-CopyPart-
+#429	REDUCE cov: 90 ft: 161 corp: 28/2170b lim: 4096 exec/s: 0 rss: 33Mb L: 253/507 MS: 2 CrossOver-EraseBytes-
+#431	NEW    cov: 90 ft: 163 corp: 29/2200b lim: 4096 exec/s: 0 rss: 33Mb L: 30/507 MS: 2 ShuffleBytes-InsertRepeatedBytes-
+#434	REDUCE cov: 90 ft: 165 corp: 30/2248b lim: 4096 exec/s: 0 rss: 33Mb L: 48/507 MS: 3 ChangeByte-InsertRepeatedBytes-EraseBytes-
+#452	NEW    cov: 90 ft: 167 corp: 31/2304b lim: 4096 exec/s: 0 rss: 33Mb L: 56/507 MS: 3 ChangeBinInt-InsertRepeatedBytes-EraseBytes-
+#502	NEW    cov: 90 ft: 169 corp: 32/2333b lim: 4096 exec/s: 0 rss: 33Mb L: 29/507 MS: 5 CMP-InsertByte-InsertByte-ChangeBit-PersAutoDict- DE: &#34;\001\000\000\000&#34;-&#34;\001\000&#34;-
+#527	NEW    cov: 90 ft: 171 corp: 33/2382b lim: 4096 exec/s: 0 rss: 33Mb L: 49/507 MS: 5 ChangeBinInt-InsertRepeatedBytes-InsertRepeatedBytes-ChangeByte-EraseBytes-
+#529	NEW    cov: 90 ft: 172 corp: 34/2443b lim: 4096 exec/s: 0 rss: 33Mb L: 61/507 MS: 2 ChangeBit-InsertByte-
+#550	NEW    cov: 90 ft: 173 corp: 35/2465b lim: 4096 exec/s: 0 rss: 33Mb L: 22/507 MS: 1 InsertByte-
+#554	NEW    cov: 90 ft: 176 corp: 36/2531b lim: 4096 exec/s: 0 rss: 33Mb L: 66/507 MS: 4 ChangeBit-PersAutoDict-ChangeBinInt-InsertRepeatedBytes- DE: &#34;\377\377\377\377&#34;-
+#575	NEW    cov: 90 ft: 178 corp: 37/2570b lim: 4096 exec/s: 0 rss: 33Mb L: 39/507 MS: 1 EraseBytes-
+#590	NEW    cov: 90 ft: 181 corp: 38/2682b lim: 4096 exec/s: 0 rss: 33Mb L: 112/507 MS: 5 EraseBytes-InsertByte-PersAutoDict-EraseBytes-InsertRepeatedBytes- DE: &#34;\001\000&#34;-
+#593	REDUCE cov: 90 ft: 181 corp: 38/2662b lim: 4096 exec/s: 0 rss: 33Mb L: 104/507 MS: 3 ChangeBinInt-ShuffleBytes-EraseBytes-
+#815	NEW    cov: 91 ft: 182 corp: 39/2748b lim: 4096 exec/s: 0 rss: 33Mb L: 86/507 MS: 2 CopyPart-CrossOver-
+#822	NEW    cov: 91 ft: 183 corp: 40/2805b lim: 4096 exec/s: 0 rss: 33Mb L: 57/507 MS: 2 ShuffleBytes-InsertByte-
+#859	REDUCE cov: 91 ft: 183 corp: 40/2766b lim: 4096 exec/s: 0 rss: 33Mb L: 73/507 MS: 2 ChangeByte-EraseBytes-
+#864	NEW    cov: 91 ft: 185 corp: 41/2804b lim: 4096 exec/s: 0 rss: 33Mb L: 38/507 MS: 5 ChangeBit-PersAutoDict-InsertRepeatedBytes-PersAutoDict-InsertByte- DE: &#34;\377\377\377\377&#34;-&#34;\025\000\000\000\000\000\000\000&#34;-
+#865	REDUCE cov: 91 ft: 185 corp: 41/2775b lim: 4096 exec/s: 0 rss: 33Mb L: 224/507 MS: 1 EraseBytes-
+#876	NEW    cov: 91 ft: 186 corp: 42/2815b lim: 4096 exec/s: 0 rss: 33Mb L: 40/507 MS: 1 CrossOver-
+#971	NEW    cov: 91 ft: 187 corp: 43/2919b lim: 4096 exec/s: 0 rss: 33Mb L: 104/507 MS: 5 ShuffleBytes-Chan
+...truncated...
+ 4096 exec/s: 132165 rss: 52Mb L: 75/444 MS: 1 EraseBytes-
+#132647	REDUCE cov: 107 ft: 223 corp: 57/4030b lim: 4096 exec/s: 132647 rss: 52Mb L: 437/437 MS: 2 InsertRepeatedBytes-EraseBytes-
+#137978	REDUCE cov: 107 ft: 223 corp: 57/4026b lim: 4096 exec/s: 137978 rss: 52Mb L: 87/437 MS: 1 EraseBytes-
+#138748	REDUCE cov: 107 ft: 223 corp: 57/4025b lim: 4096 exec/s: 138748 rss: 52Mb L: 69/437 MS: 5 CrossOver-CMP-CopyPart-ChangeBit-EraseBytes- DE: &#34;\000\000\000\000\000\000\000\031&#34;-
+#153259	REDUCE cov: 107 ft: 223 corp: 57/4023b lim: 4096 exec/s: 153259 rss: 53Mb L: 68/437 MS: 1 EraseBytes-
+#158744	REDUCE cov: 107 ft: 223 corp: 57/4004b lim: 4096 exec/s: 158744 rss: 53Mb L: 206/437 MS: 5 EraseBytes-ChangeByte-PersAutoDict-ChangeBit-CopyPart- DE: &#34;\001\000\000\000&#34;-
+#165154	REDUCE cov: 107 ft: 223 corp: 57/3995b lim: 4096 exec/s: 165154 rss: 53Mb L: 197/437 MS: 5 CMP-CMP-ChangeBinInt-ChangeBit-EraseBytes- DE: &#34;\001\000\000\000&#34;-&#34;\000\000&#34;-
+#182685	REDUCE cov: 107 ft: 223 corp: 57/3994b lim: 4096 exec/s: 182685 rss: 53Mb L: 71/437 MS: 1 EraseBytes-
+#196364	REDUCE cov: 107 ft: 223 corp: 57/3992b lim: 4096 exec/s: 196364 rss: 53Mb L: 195/437 MS: 4 CopyPart-ChangeBinInt-CMP-EraseBytes- DE: &#34;\205\000\000\000\000\000\000\000&#34;-
+#217245	REDUCE cov: 107 ft: 223 corp: 57/3988b lim: 4096 exec/s: 217245 rss: 53Mb L: 433/433 MS: 1 EraseBytes-
+#225396	REDUCE cov: 107 ft: 223 corp: 57/3972b lim: 4096 exec/s: 225396 rss: 53Mb L: 417/417 MS: 1 EraseBytes-
+#244883	REDUCE cov: 107 ft: 223 corp: 57/3970b lim: 4096 exec/s: 244883 rss: 53Mb L: 83/417 MS: 2 InsertByte-EraseBytes-
+#280989	REDUCE cov: 107 ft: 223 corp: 57/3969b lim: 4096 exec/s: 280989 rss: 53Mb L: 82/417 MS: 1 EraseBytes-
+#333266	REDUCE cov: 107 ft: 223 corp: 57/3968b lim: 4096 exec/s: 333266 rss: 54Mb L: 67/417 MS: 2 InsertByte-EraseBytes-
+#375271	REDUCE cov: 107 ft: 223 corp: 57/3967b lim: 4096 exec/s: 375271 rss: 54Mb L: 416/416 MS: 5 ChangeBit-InsertByte-CopyPart-ShuffleBytes-EraseBytes-
+#378622	REDUCE cov: 107 ft: 223 corp: 57/3965b lim: 4096 exec/s: 378622 rss: 54Mb L: 140/416 MS: 1 EraseBytes-
+#398776	REDUCE cov: 107 ft: 223 corp: 57/3713b lim: 4096 exec/s: 199388 rss: 54Mb L: 83/416 MS: 4 ChangeByte-CopyPart-EraseBytes-CrossOver-
+#403861	REDUCE cov: 107 ft: 223 corp: 57/3710b lim: 4096 exec/s: 201930 rss: 54Mb L: 80/416 MS: 5 PersAutoDict-ChangeByte-EraseBytes-InsertByte-CopyPart- DE: &#34;\001\000\000\000\000\000\000\243&#34;-
+#403988	REDUCE cov: 107 ft: 223 corp: 57/3709b lim: 4096 exec/s: 201994 rss: 54Mb L: 79/416 MS: 2 EraseBytes-CrossOver-
+#452716	REDUCE cov: 107 ft: 223 corp: 57/3702b lim: 4096 exec/s: 226358 rss: 54Mb L: 409/409 MS: 3 EraseBytes-CrossOver-CopyPart-
+#460964	REDUCE cov: 107 ft: 223 corp: 57/3701b lim: 4096 exec/s: 230482 rss: 54Mb L: 68/409 MS: 3 CMP-EraseBytes-InsertByte- DE: &#34;\026\000\000\000\000\000\000\000&#34;-
+#484175	REDUCE cov: 107 ft: 223 corp: 57/3698b lim: 4096 exec/s: 242087 rss: 54Mb L: 79/409 MS: 1 EraseBytes-
+#524288	pulse  cov: 107 ft: 223 corp: 57/3698b lim: 4096 exec/s: 262144 rss: 54Mb
+#607236	REDUCE cov: 107 ft: 223 corp: 57/3696b lim: 4096 exec/s: 303618 rss: 54Mb L: 138/409 MS: 1 EraseBytes-
+#619333	REDUCE cov: 107 ft: 223 corp: 57/3695b lim: 4096 exec/s: 309666 rss: 54Mb L: 102/409 MS: 2 CrossOver-EraseBytes-
+#703381	REDUCE cov: 107 ft: 223 corp: 57/3694b lim: 4096 exec/s: 234460 rss: 54Mb L: 408/408 MS: 3 CopyPart-ChangeBinInt-EraseBytes-
+#703755	REDUCE cov: 107 ft: 223 corp: 57/3692b lim: 4096 exec/s: 234585 rss: 54Mb L: 65/408 MS: 4 PersAutoDict-CrossOver-CopyPart-CopyPart- DE: &#34;\341\000\000\000\000\000\000\000&#34;-
+#737795	REDUCE cov: 107 ft: 223 corp: 57/3689b lim: 4096 exec/s: 245931 rss: 54Mb L: 135/408 MS: 5 InsertByte-ChangeBinInt-CopyPart-CrossOver-EraseBytes-
+#740226	REDUCE cov: 107 ft: 223 corp: 57/3672b lim: 4096 exec/s: 246742 rss: 54Mb L: 391/391 MS: 1 EraseBytes-
+#764285	REDUCE cov: 107 ft: 223 corp: 57/3670b lim: 4096 exec/s: 254761 rss: 54Mb L: 133/391 MS: 4 ChangeByte-ChangeByte-ChangeByte-EraseBytes-
+#869737	REDUCE cov: 107 ft: 223 corp: 57/3668b lim: 4096 exec/s: 289912 rss: 54Mb L: 131/391 MS: 2 ShuffleBytes-EraseBytes-
+#952297	REDUCE cov: 107 ft: 223 corp: 57/3667b lim: 4096 exec/s: 317432 rss: 54Mb L: 101/391 MS: 5 EraseBytes-ChangeByte-CMP-CopyPart-InsertByte- DE: &#34;\377\377&#34;-
+#1012694	REDUCE cov: 107 ft: 223 corp: 57/3655b lim: 4096 exec/s: 337564 rss: 54Mb L: 379/379 MS: 2 CopyPart-EraseBytes-
+#1048576	pulse  cov: 107 ft: 223 corp: 57/3655b lim: 4096 exec/s: 262144 rss: 55Mb
+#1159791	REDUCE cov: 107 ft: 223 corp: 57/3653b lim: 4096 exec/s: 289947 rss: 55Mb L: 377/377 MS: 2 CMP-EraseBytes- DE: &#34;\377\377&#34;-
+#1302823	REDUCE cov: 107 ft: 223 corp: 57/3645b lim: 4096 exec/s: 260564 rss: 55Mb L: 369/369 MS: 2 ChangeBinInt-EraseBytes-
+#1401166	REDUCE cov: 107 ft: 223 corp: 57/3627b lim: 4096 exec/s: 280233 rss: 56Mb L: 351/351 MS: 3 EraseBytes-ChangeByte-CopyPart-
+#1410793	REDUCE cov: 107 ft: 223 corp: 57/3620b lim: 4096 exec/s: 282158 rss: 56Mb L: 344/344 MS: 2 EraseBytes-CopyPart-
+#2097152	pulse  cov: 107 ft: 223 corp: 57/3620b lim: 4096 exec/s: 262144 rss: 56Mb
+#2317010	REDUCE cov: 107 ft: 223 corp: 57/3619b lim: 4096 exec/s: 289626 rss: 56Mb L: 70/344 MS: 2 PersAutoDict-EraseBytes- DE: &#34;:\000\000\000\000\000\000\000&#34;-
+#2362628	REDUCE cov: 107 ft: 223 corp: 57/3616b lim: 4096 exec/s: 262514 rss: 56Mb L: 341/341 MS: 3 ShuffleBytes-ShuffleBytes-EraseBytes-
+#2367255	REDUCE cov: 107 ft: 223 corp: 57/3613b lim: 4096 exec/s: 263028 rss: 56Mb L: 338/338 MS: 2 EraseBytes-CMP- DE: &#34;\377\377&#34;-
+#2658615	REDUCE cov: 107 ft: 223 corp: 57/3609b lim: 4096 exec/s: 265861 rss: 56Mb L: 334/334 MS: 5 CopyPart-EraseBytes-CopyPart-ChangeByte-CopyPart-
+#2738911	REDUCE cov: 107 ft: 223 corp: 57/3607b lim: 4096 exec/s: 273891 rss: 56Mb L: 332/332 MS: 1 EraseBytes-
+#2858474	REDUCE cov: 107 ft: 223 corp: 57/3606b lim: 4096 exec/s: 285847 rss: 56Mb L: 331/331 MS: 3 CopyPart-ShuffleBytes-EraseBytes-
+#3240064	REDUCE cov: 107 ft: 223 corp: 57/3605b lim: 4096 exec/s: 270005 rss: 56Mb L: 67/331 MS: 5 ChangeBit-CopyPart-EraseBytes-EraseBytes-CopyPart-
+#3445965	REDUCE cov: 107 ft: 223 corp: 57/3604b lim: 4096 exec/s: 265074 rss: 56Mb L: 330/330 MS: 1 EraseBytes-
+#3824886	REDUCE cov: 107 ft: 223 corp: 57/3602b lim: 4096 exec/s: 273206 rss: 56Mb L: 129/330 MS: 1 EraseBytes-
+#4194304	pulse  cov: 107 ft: 223 corp: 57/3602b lim: 4096 exec/s: 262144 rss: 56Mb
+#6143941	REDUCE cov: 107 ft: 223 corp: 57/3598b lim: 4096 exec/s: 279270 rss: 56Mb L: 103/330 MS: 5 ChangeByte-CopyPart-ChangeBinInt-CrossOver-EraseBytes-
+#7446521	REDUCE cov: 107 ft: 223 corp: 57/3597b lim: 4096 exec/s: 275797 rss: 56Mb L: 146/330 MS: 5 EraseBytes-InsertRepeatedBytes-PersAutoDict-CopyPart-EraseBytes- DE: &#34;\377\377&#34;-
+#7452859	REDUCE cov: 107 ft: 223 corp: 57/3596b lim: 4096 exec/s: 276031 rss: 56Mb L: 145/330 MS: 3 ChangeBit-CrossOver-EraseBytes-
+#7597902	REDUCE cov: 107 ft: 223 corp: 57/3595b lim: 4096 exec/s: 281403 rss: 56Mb L: 144/330 MS: 3 ChangeBit-InsertByte-EraseBytes-
+#7905412	REDUCE cov: 107 ft: 223 corp: 57/3594b lim: 4096 exec/s: 282336 rss: 56Mb L: 143/330 MS: 5 PersAutoDict-ChangeByte-ChangeBinInt-EraseBytes-InsertByte- DE: &#34;\377\377\377\377&#34;-
+#8388608	pulse  cov: 107 ft: 223 corp: 57/3594b lim: 4096 exec/s: 279620 rss: 56Mb
+#8549402	DONE   cov: 107 ft: 223 corp: 57/3594b lim: 4096 exec/s: 275787 rss: 56Mb
+###### Recommended dictionary. ######
+&#34;\001\000&#34; # Uses: 62331
+&#34;\001\000\000\000&#34; # Uses: 56319
+&#34;\377\377\377\377&#34; # Uses: 55837
+&#34;\025\000\000\000\000\000\000\000&#34; # Uses: 51686
+&#34;\000\000&#34; # Uses: 62195
+&#34;\001\000\000\000\000\000\000\243&#34; # Uses: 51528
+&#34;\377\377&#34; # Uses: 61544
+&#34;\&#34;\000\000\000\000\000\000\000&#34; # Uses: 51254
+&#34;:\000\000\000\000\000\000\000&#34; # Uses: 51414
+&#34;\341\000\000\000\000\000\000\000&#34; # Uses: 50425
+&#34;\000\000\000\000\000\000\000\031&#34; # Uses: 49552
+&#34;\205\000\000\000\000\000\000\000&#34; # Uses: 49729
+&#34;\026\000\000\000\000\000\000\000&#34; # Uses: 47759
+###### End of recommended dictionary. ######
+Done 8549402 runs in 31 second(s)
+stat::number_of_executed_units: 8549402
+stat::average_exec_per_sec:     275787
+stat::new_units_added:          223
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              56
+
+</pre>
+
+
+</body>

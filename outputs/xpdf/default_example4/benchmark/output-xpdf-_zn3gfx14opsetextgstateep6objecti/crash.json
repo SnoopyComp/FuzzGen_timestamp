@@ -1,0 +1,45 @@
+{
+    "samples": [
+
+    {
+        "benchmark": "output-xpdf-_zn3gfx14opsetextgstateep6objecti",
+        "sample": "01",
+        "status": "Done",
+        "compiles": "True",
+        "crashes": "False",
+        "crash_reason": "NO_COV_INCREASE",
+        "bug": "False",
+        "triage": "-",
+        "coverage": "0.00",
+        "coverage_diff": "0.0",
+        "coverage_report": "/sample/output-xpdf-_zn3gfx14opsetextgstateep6objecti/coverage/01/linux/report.html",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <vector>\\n#include <cstdlib> // For std::rand and std::srand\\n#include <ctime>   // For std::time\\n\\n// Assume the definition of Object is available in the context\\nclass Object {\\npublic:\\n    // Implementation details for Object\\n    // Adding a constructor for initialization\\n    Object() {\\n        // Initialize the object state if necessary\\n        state = 0; // Default state\\n    }\\n\\n    // Example method to demonstrate functionality\\n    void setState(int newState) {\\n        // Set the object's state based on the provided integer\\n        state = newState; // Update internal state\\n    }\\n\\n    int getState() const {\\n        return state; // Method to retrieve the current state\\n    }\\n\\nprivate:\\n    int state; // Internal state variable\\n};\\n\\nnamespace Gfx {\\n    void opSetExtGState(Object *obj, int state) {\\n        // Function implementation\\n        if (obj) {\\n            obj->setState(state); // Update the object's state\\n        }\\n    }\\n}\\n\\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\n    FuzzedDataProvider stream(data, size);\\n\\n    // Create an Object instance (ensure it's not NULL)\\n    Object obj; // Assuming a default constructor is available\\n\\n    // Consume an integer value for the state parameter\\n    // Vary the range of the state to explore more code paths\\n    int state = stream.ConsumeIntegralInRange<int>(0, 100); // Example range\\n\\n    // Call the function under test with the object and state\\n    Gfx::opSetExtGState(&obj, state);\\n\\n    // Additionally, consume some data to further invoke different paths\\n    // This can be extended based on the actual implementation of Object\\n    if (size > 0) {\\n        // Example: Use the first byte of data to influence the state\\n        int additionalState = stream.ConsumeIntegralInRange<int>(0, 100);\\n        Gfx::opSetExtGState(&obj, additionalState);\\n    }\\n\\n    // Optionally, check the state to ensure it has been set correctly\\n    int finalState = obj.getState();\\n    \\n    // Introduce a second call to the function with a different state\\n    if (size > 1) {\\n        // Use the second byte of data to influence the state\\n        int anotherState = stream.ConsumeIntegralInRange<int>(0, 100);\\n        Gfx::opSetExtGState(&obj, anotherState);\\n    }\\n\\n    // This check can be expanded to validate the state further if needed\\n\\n    return 0;\\n}",
+        "model": ""
+    },
+
+    {
+        "benchmark": "output-xpdf-_zn3gfx14opsetextgstateep6objecti",
+        "sample": "02",
+        "status": "Done",
+        "compiles": "True",
+        "crashes": "False",
+        "crash_reason": "NO_SEMANTIC_ERR",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "33.33",
+        "coverage_diff": "0.0",
+        "coverage_report": "/sample/output-xpdf-_zn3gfx14opsetextgstateep6objecti/coverage/02/linux/report.html",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <chrono>\\n#ifndef iostream\\n#include <iostream>\\n#endif\\n#include <vector>\\n#include <cstdint>\\n#include <cstring> // Include for std::memcpy\\n#include <limits>  // Include for std::numeric_limits\\n\\n// Assuming Object is a defined class that can be instantiated\\nclass Object {\\npublic:\\n    // Example member variable to demonstrate state interaction\\n    int internalState;\\n\\n    Object() : internalState(0) {\\n        // Initialize the object as needed\\n    }\\n\\n    // Method to update internal state\\n    void updateState(int state) {\\n        internalState = state;\\n    }\\n};\\n\\nnamespace Gfx {\\n    void opSetExtGState(Object *obj, int state) {\\n        // Function implementation\\n        if (obj != nullptr) {\\n            // Update the state of the object based on the input\\n            obj->updateState(state);\\n            // Example logic that might be influenced by the state\\n            // This is just a placeholder for the actual implementation\\n        }\\n    }\\n}\\n\\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\nauto start_target = std::chrono::high_resolution_clock::now();\\n    // Create a FuzzedDataProvider instance\\n    FuzzedDataProvider fuzzed_data(data, size);\\n\\n    // Create an Object instance\\n    Object obj;\\n\\n    // Consume an integer value for the state parameter\\n    // Use a wider range of integers to maximize fuzzing coverage\\n    int state = fuzzed_data.ConsumeIntegralInRange<int>(\\n        std::numeric_limits<int>::min(), std::numeric_limits<int>::max());\\n\\n    // Ensure to use a valid pointer to the Object\\n\tauto start_func = std::chrono::high_resolution_clock::now();\\n    Gfx::opSetExtGState(&obj, state);\\n\tauto end_func = std::chrono::high_resolution_clock::now();\\n\\n    // Optionally, you can also consume additional data to modify the internal state\\n    // This can help in exploring different paths in the implementation\\n    int additionalState = fuzzed_data.ConsumeIntegralInRange<int>(\\n        std::numeric_limits<int>::min(), std::numeric_limits<int>::max());\\n    \\n    // Update the internal state with additional data\\n    obj.updateState(additionalState);\\n\\n    // Additionally, we can consume a boolean to decide whether to call the function again\\n    bool shouldInvokeAgain = fuzzed_data.ConsumeBool();\\n    if (shouldInvokeAgain) {\\n        // Invoke the function again with a different state\\n        int newState = fuzzed_data.ConsumeIntegralInRange<int>(\\n            std::numeric_limits<int>::min(), std::numeric_limits<int>::max());\\n        Gfx::opSetExtGState(&obj, newState);\\n    }\\nauto end_target = std::chrono::high_resolution_clock::now();\\nstd::cout<<\"Target runtime : \"<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<\", Function runtime : \"<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;\\n\\n    return 0;\\n}",
+        "model": ""
+    }
+
+    ]
+}

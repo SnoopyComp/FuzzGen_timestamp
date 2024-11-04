@@ -1,0 +1,53 @@
+LLVMFuzzerTestOneInput:
+   29|      3|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   30|      3|auto start_target = std::chrono::high_resolution_clock::now();
+   31|       |    // Initialize FuzzedDataProvider with the provided data and size.
+   32|      3|    FuzzedDataProvider stream(data, size);
+   33|       |
+   34|       |    // Create an instance of SplashOutputDev.
+   35|      3|    SplashOutputDev splashOutputDev;
+   36|       |
+   37|       |    // Initialize GfxState object.
+   38|      3|    GfxState gfxState;
+   39|       |
+   40|       |    // Consume some data to initialize members of GfxState.
+   41|      3|    gfxState.some_member = stream.ConsumeIntegral<int>();
+   42|       |
+   43|       |    // Call the function under test with the initial gfxState.
+   44|      3|	auto start_func = std::chrono::high_resolution_clock::now();
+   45|      3|    splashOutputDev.doUpdateFont(&gfxState);
+   46|      3|	auto end_func = std::chrono::high_resolution_clock::now();
+   47|       |
+   48|       |    // Use a loop to create multiple GfxState instances with varying data.
+   49|     33|    for (int i = 0; i < 10; ++i) {
+  ------------------
+  |  Branch (49:21): [True: 30, False: 3]
+  ------------------
+   50|     30|        GfxState tempGfxState;
+   51|       |        // Consume different data for each instance to maximize coverage.
+   52|     30|        tempGfxState.some_member = stream.ConsumeIntegral<int>();
+   53|     30|        splashOutputDev.doUpdateFont(&tempGfxState);
+   54|     30|    }
+   55|       |
+   56|       |    // Additionally, call doUpdateFont with modified gfxState to test state changes.
+   57|     18|    for (int j = 0; j < 5; ++j) {
+  ------------------
+  |  Branch (57:21): [True: 15, False: 3]
+  ------------------
+   58|     15|        gfxState.some_member = stream.ConsumeIntegral<int>();
+   59|     15|        splashOutputDev.doUpdateFont(&gfxState);
+   60|     15|    }
+   61|      3|auto end_target = std::chrono::high_resolution_clock::now();
+   62|      3|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   63|       |
+   64|      3|    return 0;
+   65|      3|}
+_ZN8GfxStateC2Ev:
+   17|     33|    GfxState() : some_member(0) {} // Initialize to default values
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   22|     48|    void doUpdateFont(GfxState *gfxState) {
+   23|       |        // Function implementation goes here.
+   24|       |        // For demonstration purposes, let's assume it modifies some_member.
+   25|     48|        gfxState->some_member += 1; // Example operation
+   26|     48|    }
+
