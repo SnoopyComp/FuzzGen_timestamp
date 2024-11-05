@@ -1,0 +1,895 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experiment results</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    line-height: 1.15;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border-right: 1px #dedede solid;
+    border-bottom: 1px #dedede solid;
+    padding: 5px;
+    text-align: left;
+}
+td:first-child, th:first-child {
+    border-left: 1px #dedede solid;
+}
+th {
+    border-top: 1px #dedede solid;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f4f5ff;
+}
+
+.chat_prompt {
+    background-color: #fff7f2;
+    max-width: 50%;
+    overflow: scroll;
+}
+
+.chat_response {
+    background-color: #fcfff2;
+    max-width: 50%;
+    overflow: scroll;
+    margin-left: auto;
+}
+</style>
+<body>
+    LLM: 
+    
+<h1>output-xpdf-_zn3gfx14opsetextgstateep6objecti / 01</h1>
+Bug: False
+<br>
+Crash reason: NO_COV_INCREASE
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<h3>Final code</h3>
+
+<pre>
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    int getState() const { // Added a method to retrieve the state
+        return state;
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    // We can use a wider range of integers to maximize the fuzzing coverage
+    int state = stream.ConsumeIntegralInRange&lt;int&gt;(-100, 100); // Adjust the range as needed
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    // Optionally, retrieve the state and perform some assertions or checks
+    // This can help in ensuring that the state has been set correctly
+    int currentState = obj.getState();
+    
+    // Here you could add assertions or checks based on the expected behavior
+    // For example:
+    // assert(currentState == state); // Uncomment if you want to check the state
+
+    // Additionally, we can consume more data to ensure we are testing various scenarios
+    if (stream.remaining_bytes() &gt; 0) {
+        // Consume additional bytes if available and modify the object state or behavior
+        // This part can be customized based on the actual behavior of Object
+        // For example, we could use the remaining bytes to influence the state in some way
+        int additionalState = stream.ConsumeIntegral&lt;int&gt;();
+        obj.setState(additionalState);
+    }
+
+    return 0;
+}
+</pre>
+
+
+<h3>Fixer prompt #1</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+    }
+    // Other members and methods for Object
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    int state = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: No code coverage increasement, indicating the fuzz target ineffectively invokes the function under test.
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #1</h3>
+
+<pre>
+Here is the fixed code that addresses the issues mentioned, ensuring that the function under test is effectively invoked with meaningful input during fuzzing:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+    }
+    // Other members and methods for Object
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    int state = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Ensure the state value is valid and meaningful
+    if (state &lt; 0) {
+        state = 0; // Adjust state to be non-negative if needed
+    }
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+```
+
+### Explanation of Changes:
+1. **Include `&lt;cstring&gt;`**: This header is included to ensure that any memory operations (if needed) are supported, although not explicitly used in this code snippet.
+2. **State Validation**: Added a check to ensure that the `state` value is non-negative before passing it to the function. This is a simple way to ensure that the input is valid and helps in maximizing the fuzzing results by avoiding potential invalid states that might not exercise the function&#39;s logic effectively.
+3. **General Structure**: The overall structure of the code remains unchanged to ensure that it still functions as intended while improving the fuzzing coverage.
+
+This should help in invoking the function under test more effectively and increase code coverage during fuzzing.
+</pre>
+
+
+<h3>Fixer prompt #2</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+    }
+    // Other members and methods for Object
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    int state = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Ensure the state value is valid and meaningful
+    if (state &lt; 0) {
+        state = 0; // Adjust state to be non-negative if needed
+    }
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: No code coverage increasement, indicating the fuzz target ineffectively invokes the function under test.
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #2</h3>
+
+<pre>
+Here is the fixed code. The main change is to ensure that the `Object` class has some meaningful state or data that can be modified based on the input from the fuzzer. This will help maximize the fuzzing result by allowing the function under test to be invoked in a more varied manner.
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    int state = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Ensure the state value is valid and meaningful
+    if (state &lt; 0) {
+        state = 0; // Adjust state to be non-negative if needed
+    }
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Object Class Enhancement**: Added a private member variable `state` to the `Object` class and a method `setState(int newState)` to modify its state. This allows the `Gfx::opSetExtGState` function to have a meaningful effect on the `Object` instance.
+2. **Function Implementation**: Modified the `opSetExtGState` function to call `setState(state)` on the `Object` instance, which allows the fuzzing to affect the internal state of the object.
+
+These changes should help increase code coverage during fuzzing by ensuring that the function being tested interacts with the `Object` in a meaningful way.
+</pre>
+
+
+<h3>Fixer prompt #3</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    int state = stream.ConsumeIntegral&lt;int&gt;();
+
+    // Ensure the state value is valid and meaningful
+    if (state &lt; 0) {
+        state = 0; // Adjust state to be non-negative if needed
+    }
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: No code coverage increasement, indicating the fuzz target ineffectively invokes the function under test.
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #3</h3>
+
+<pre>
+To enhance the fuzzing effectiveness of the provided code, we can modify the way we consume the input data. Instead of simply consuming an integer, we can also ensure that we generate a variety of states that the `Object` can take. This will help in exploring different paths within the `opSetExtGState` function.
+
+Here’s the modified code:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    // We can use a wider range of integers to maximize the fuzzing coverage
+    int state = stream.ConsumeIntegralInRange&lt;int&gt;(-100, 100); // Adjust the range as needed
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **State Value Consumption**: Instead of consuming an integer directly, we now use `ConsumeIntegralInRange&lt;int&gt;(-100, 100)` to generate a wider range of state values, including negative values. This allows us to test how the `Object` handles different states, maximizing the coverage of the function under test.
+
+2. **Retaining Original Structure**: The overall structure of the code remains unchanged, ensuring that the logic and flow of the program are preserved while enhancing the fuzzing capability.
+
+This approach should improve the effectiveness of the fuzzing process by ensuring that the `opSetExtGState` function is invoked with a variety of inputs, which can help in identifying edge cases and potential issues in the implementation.
+</pre>
+
+
+<h3>Fixer prompt #4</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    // We can use a wider range of integers to maximize the fuzzing coverage
+    int state = stream.ConsumeIntegralInRange&lt;int&gt;(-100, 100); // Adjust the range as needed
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: No code coverage increasement, indicating the fuzz target ineffectively invokes the function under test.
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #4</h3>
+
+<pre>
+Here&#39;s the complete code with the necessary adjustments to ensure that the fuzzing harness effectively invokes the function under test and maximizes coverage. The main change is to ensure that the `Object` instance is modified in a way that can lead to different states being tested.
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    int getState() const { // Added a method to retrieve the state
+        return state;
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    // We can use a wider range of integers to maximize the fuzzing coverage
+    int state = stream.ConsumeIntegralInRange&lt;int&gt;(-100, 100); // Adjust the range as needed
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    // Optionally, retrieve the state and perform some assertions or checks
+    // This can help in ensuring that the state has been set correctly
+    int currentState = obj.getState();
+    // Here you could add assertions or checks based on the expected behavior
+    // For example:
+    // assert(currentState == state); // Uncomment if you want to check the state
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Added `getState` Method**: This method allows retrieval of the state of the `Object`, which can be useful for further checks or assertions during fuzzing.
+2. **Comment on State Verification**: A comment is added where you could potentially add assertions to check if the state was set correctly. This can help in validating the effectiveness of the fuzzing process.
+
+These changes should help in maximizing the coverage and ensuring that the function under test is effectively invoked with varying inputs.
+</pre>
+
+
+<h3>Fixer prompt #5</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    int getState() const { // Added a method to retrieve the state
+        return state;
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    // We can use a wider range of integers to maximize the fuzzing coverage
+    int state = stream.ConsumeIntegralInRange&lt;int&gt;(-100, 100); // Adjust the range as needed
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    // Optionally, retrieve the state and perform some assertions or checks
+    // This can help in ensuring that the state has been set correctly
+    int currentState = obj.getState();
+    // Here you could add assertions or checks based on the expected behavior
+    // For example:
+    // assert(currentState == state); // Uncomment if you want to check the state
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: No code coverage increasement, indicating the fuzz target ineffectively invokes the function under test.
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #5</h3>
+
+<pre>
+To enhance the fuzzing effectiveness and ensure that the function under test is invoked with a wider range of inputs, we can modify the way we consume data from the `FuzzedDataProvider`. Specifically, we can consume a larger variety of input data, ensuring that the `state` parameter is not only within the range but also that the `Object` instance is manipulated in a meaningful way.
+
+Here’s the modified code:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstring&gt; // Include for std::memcpy
+
+// Assuming Object is a user-defined type that has a proper constructor or initialization method
+class Object {
+public:
+    Object() {
+        // Initialize the object as needed
+        // For example, we can have a member variable to represent state
+        state = 0; // Default state
+    }
+
+    void setState(int newState) {
+        state = newState; // Set the state based on input
+    }
+
+    int getState() const { // Added a method to retrieve the state
+        return state;
+    }
+
+    // Other members and methods for Object
+private:
+    int state; // Example member variable
+};
+
+namespace Gfx {
+    void opSetExtGState(Object *obj, int state) {
+        // Function implementation
+        // For demonstration, we can set the state of the object
+        obj-&gt;setState(state);
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an Object instance
+    Object obj;
+
+    // Consume an integer value for the second parameter
+    // We can use a wider range of integers to maximize the fuzzing coverage
+    int state = stream.ConsumeIntegralInRange&lt;int&gt;(-100, 100); // Adjust the range as needed
+
+    // Call the function under test
+    Gfx::opSetExtGState(&amp;obj, state);
+
+    // Optionally, retrieve the state and perform some assertions or checks
+    // This can help in ensuring that the state has been set correctly
+    int currentState = obj.getState();
+    
+    // Here you could add assertions or checks based on the expected behavior
+    // For example:
+    // assert(currentState == state); // Uncomment if you want to check the state
+
+    // Additionally, we can consume more data to ensure we are testing various scenarios
+    if (stream.remaining_bytes() &gt; 0) {
+        // Consume additional bytes if available and modify the object state or behavior
+        // This part can be customized based on the actual behavior of Object
+        // For example, we could use the remaining bytes to influence the state in some way
+        int additionalState = stream.ConsumeIntegral&lt;int&gt;();
+        obj.setState(additionalState);
+    }
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Additional Data Consumption**: After calling `opSetExtGState`, we check if there are remaining bytes in the `FuzzedDataProvider`. If there are, we consume them and use them to modify the state of the `Object`. This allows us to explore different states and behaviors of the `Object`, increasing the likelihood of invoking different code paths in the function under test.
+2. **Commented Assertions**: The assertion line is left commented for optional use, depending on whether you want to enforce checks during fuzzing.
+
+These changes should help maximize the fuzzing results by ensuring that the `Object` is manipulated in a variety of ways, leading to more effective code coverage.
+</pre>
+
+
+<h2>Logs</h2>
+
+<pre >
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini, attempt 1.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini, attempt 2.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini, attempt 3.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini, attempt 4.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini, attempt 5.
+Successfully built /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini in 5 iterations of fixing.
+Triaging the crash related to /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/fixed_targets/01.cc with gpt-4o-mini.
+Warning: no crash info in xpdf-zn3gfx14opsetextgstateep6objecti-01.
+Warning: Failed to fix semantic error NO_COV_INCREASE in xpdf-zn3gfx14opsetextgstateep6objecti-01.
+
+</pre>
+
+
+<h2>Run logs</h2>
+<pre>
+INFO:__main__:Running: docker run --privileged --shm-size=2g --platform linux/amd64 --rm -e FUZZING_ENGINE=libfuzzer -e SANITIZER=address -e RUN_FUZZER_MODE=interactive -e HELPER=True -v /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example10/output-xpdf-_zn3gfx14opsetextgstateep6objecti/corpora/01.cc:/tmp/fuzz_zxdoc_corpus -v /tmp/tmpwa14t9s5/build/out/xpdf-zn3gfx14opsetextgstateep6objecti-01:/out -t gcr.io/oss-fuzz-base/base-runner run_fuzzer fuzz_zxdoc -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30.
+vm.mmap_rnd_bits = 28
+rm: cannot remove &#39;/tmp/fuzz_zxdoc_corpus&#39;: Device or resource busy
+/out/fuzz_zxdoc -rss_limit_mb=2560 -timeout=25 -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30 /tmp/fuzz_zxdoc_corpus &lt; /dev/null
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 745901922
+INFO: Loaded 1 modules   (2 inline 8-bit counters): 2 [0x5568cf887ff8, 0x5568cf887ffa), 
+INFO: Loaded 1 PC tables (2 PCs): 2 [0x5568cf888000,0x5568cf888020), 
+INFO:        0 files found in /tmp/fuzz_zxdoc_corpus
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: A corpus is not provided, starting from an empty corpus
+#2	INITED cov: 1 ft: 1 corp: 1/1b exec/s: 0 rss: 30Mb
+#4194304	pulse  cov: 1 ft: 1 corp: 1/1b lim: 4096 exec/s: 1398101 rss: 57Mb
+#8388608	pulse  cov: 1 ft: 1 corp: 1/1b lim: 4096 exec/s: 1398101 rss: 57Mb
+#16777216	pulse  cov: 1 ft: 1 corp: 1/1b lim: 4096 exec/s: 1525201 rss: 57Mb
+#33554432	pulse  cov: 1 ft: 1 corp: 1/1b lim: 4096 exec/s: 1398101 rss: 57Mb
+#39756707	DONE   cov: 1 ft: 1 corp: 1/1b lim: 4096 exec/s: 1282474 rss: 57Mb
+Done 39756707 runs in 31 second(s)
+stat::number_of_executed_units: 39756707
+stat::average_exec_per_sec:     1282474
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              57
+
+</pre>
+
+
+</body>

@@ -1,0 +1,51 @@
+LLVMFuzzerTestOneInput:
+   27|     50|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   28|     50|auto start_target = std::chrono::high_resolution_clock::now();
+   29|     50|    FuzzedDataProvider stream(data, size);
+   30|       |
+   31|       |    // Initialize parameters
+   32|     50|    GfxState gfxState; // Assuming default constructor is available
+   33|     50|    double x = stream.ConsumeFloatingPoint<double>();
+   34|     50|    double y = stream.ConsumeFloatingPoint<double>();
+   35|     50|    double width = stream.ConsumeFloatingPoint<double>();
+   36|     50|    double height = stream.ConsumeFloatingPoint<double>();
+   37|     50|    double ascent = stream.ConsumeFloatingPoint<double>();
+   38|     50|    double descent = stream.ConsumeFloatingPoint<double>();
+   39|     50|    CharCode charCode = stream.ConsumeIntegral<CharCode>();
+   40|     50|    int fontSize = stream.ConsumeIntegral<int>();
+   41|       |    
+   42|       |    // Prepare Unicode array
+   43|     50|    size_t unicodeCount = stream.ConsumeIntegralInRange<size_t>(1, 100); // Ensure at least 1 Unicode character
+   44|     50|    std::string unicodeString = stream.ConsumeRandomLengthString(unicodeCount * sizeof(Unicode));
+   45|       |    
+   46|       |    // Ensure the Unicode pointer is valid
+   47|     50|    if (unicodeString.size() != unicodeCount * sizeof(Unicode)) {
+  ------------------
+  |  Branch (47:9): [True: 48, False: 2]
+  ------------------
+   48|     48|        return 0; // Invalid size, do not proceed
+   49|     48|    }
+   50|       |    
+   51|      2|    std::vector<Unicode> unicodeArray(reinterpret_cast<Unicode*>(const_cast<char*>(unicodeString.data())), 
+   52|      2|                                       reinterpret_cast<Unicode*>(const_cast<char*>(unicodeString.data())) + unicodeCount);
+   53|       |    
+   54|       |    // Consume boolean values
+   55|      2|    GBool isUnderlined = stream.ConsumeBool();
+   56|      2|    GBool isBold = stream.ConsumeBool();
+   57|      2|    GBool isItalic = stream.ConsumeBool();
+   58|       |
+   59|       |    // Call the function under test
+   60|      2|    SplashOutputDev splashOutputDev;
+   61|      2|	auto start_func = std::chrono::high_resolution_clock::now();
+   62|      2|    splashOutputDev.drawChar(&gfxState, x, y, width, height, ascent, descent, charCode, fontSize, unicodeArray.data(), static_cast<int>(unicodeCount), isUnderlined, isBold, isItalic);
+   63|      2|	auto end_func = std::chrono::high_resolution_clock::now();
+   64|      2|auto end_target = std::chrono::high_resolution_clock::now();
+   65|      2|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   66|       |
+   67|      2|    return 0;
+   68|     50|}
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddjiPjibbb:
+   22|      2|                  GBool isBold, GBool isItalic) {
+   23|       |        // Function implementation
+   24|      2|    }
+

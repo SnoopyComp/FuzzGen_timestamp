@@ -1,0 +1,59 @@
+LLVMFuzzerTestOneInput:
+   45|     19|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   46|     19|auto start_target = std::chrono::high_resolution_clock::now();
+   47|       |    // Ensure we have a valid size for the fuzzed data
+   48|     19|    if (size == 0) {
+  ------------------
+  |  Branch (48:9): [True: 0, False: 19]
+  ------------------
+   49|      0|        return 0; // No input to process
+   50|      0|    }
+   51|       |
+   52|     19|    FuzzedDataProvider stream(data, size);
+   53|       |
+   54|       |    // Create an instance of SplashOutputDev
+   55|     19|    SplashOutputDev splashOutputDev;
+   56|       |
+   57|       |    // Create a GfxState object
+   58|     19|    GfxState gfxState;
+   59|       |
+   60|       |    // Use the fuzzed data to influence the GfxState
+   61|     19|    int fontSize = stream.ConsumeIntegralInRange<int>(1, 100); // Random font size between 1 and 100
+   62|     19|    gfxState.setFontSize(fontSize);
+   63|       |
+   64|       |    // Consume a string from the fuzzed data for the font name
+   65|     19|    std::string fontName = stream.ConsumeRandomLengthString(49); // Max length 49 to fit in the buffer
+   66|     19|    gfxState.setFontName(fontName.c_str());
+   67|       |
+   68|       |    // Call the function under test
+   69|     19|	auto start_func = std::chrono::high_resolution_clock::now();
+   70|     19|    splashOutputDev.doUpdateFont(&gfxState);
+   71|     19|	auto end_func = std::chrono::high_resolution_clock::now();
+   72|     19|auto end_target = std::chrono::high_resolution_clock::now();
+   73|     19|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   74|       |
+   75|     19|    return 0;
+   76|     19|}
+_ZN8GfxStateC2Ev:
+   16|     19|    GfxState() {
+   17|       |        // Initialize members
+   18|     19|        fontSize = 12; // Default font size
+   19|     19|        memset(fontName, 0, sizeof(fontName)); // Clear font name
+   20|     19|    }
+_ZN8GfxState11setFontSizeEi:
+   22|     19|    void setFontSize(int size) {
+   23|     19|        fontSize = size;
+   24|     19|    }
+_ZN8GfxState11setFontNameEPKc:
+   26|     19|    void setFontName(const char* name) {
+   27|     19|        strncpy(fontName, name, sizeof(fontName) - 1);
+   28|     19|        fontName[sizeof(fontName) - 1] = '\0'; // Ensure null-termination
+   29|     19|    }
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   36|     19|    void doUpdateFont(GfxState *state) {
+   37|       |        // Function implementation...
+   38|       |        // For example, just printing the state (in a real implementation, this would do something meaningful)
+   39|       |        // This is just for demonstration and should be replaced with actual logic.
+   40|     19|        printf("Font Size: %d, Font Name: %s\n", state->fontSize, state->fontName);
+   41|     19|    }
+

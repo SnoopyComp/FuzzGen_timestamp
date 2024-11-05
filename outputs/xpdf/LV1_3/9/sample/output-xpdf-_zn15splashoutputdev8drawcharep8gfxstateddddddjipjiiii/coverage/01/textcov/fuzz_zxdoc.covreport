@@ -1,0 +1,72 @@
+LLVMFuzzerTestOneInput:
+   48|     68|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   49|     68|auto start_target = std::chrono::high_resolution_clock::now();//erase
+   50|     68|    FuzzedDataProvider stream(data, size);
+   51|       |
+   52|       |    // Create an instance of SplashOutputDev
+   53|     68|    SplashOutputDev splashOutputDev;
+   54|       |
+   55|       |    // Create a GfxState object
+   56|     68|    GfxState gfxState;
+   57|       |
+   58|       |    // Use the fuzzed data to influence the GfxState
+   59|     68|    int fontSize = stream.ConsumeIntegralInRange<int>(1, 100); // Random font size between 1 and 100
+   60|     68|    gfxState.setFontSize(fontSize);
+   61|       |
+   62|       |    // Consume a string from the fuzzed data for the font name
+   63|     68|    std::string fontName = stream.ConsumeRandomLengthString(49); // Max length 49 to fit in the buffer
+   64|     68|    gfxState.setFontName(fontName.c_str());
+   65|       |
+   66|       |    // Prepare parameters for drawChar
+   67|     68|    double x = stream.ConsumeFloatingPoint<double>();
+   68|     68|    double y = stream.ConsumeFloatingPoint<double>();
+   69|     68|    double width = stream.ConsumeFloatingPoint<double>();
+   70|     68|    double height = stream.ConsumeFloatingPoint<double>();
+   71|     68|    double ascent = stream.ConsumeFloatingPoint<double>();
+   72|     68|    double descent = stream.ConsumeFloatingPoint<double>();
+   73|     68|    CharCode charCode = stream.ConsumeIntegral<CharCode>();
+   74|     68|    int unicodeCount = stream.ConsumeIntegralInRange<int>(0, 100); // Random count for Unicode array
+   75|     68|    std::vector<Unicode> unicodeArray(unicodeCount); // Create Unicode array
+   76|       |
+   77|       |    // Fill unicodeArray with fuzzed data
+   78|  1.01k|    for (int i = 0; i < unicodeCount; ++i) {
+  ------------------
+  |  Branch (78:21): [True: 951, False: 68]
+  ------------------
+   79|    951|        unicodeArray[i] = stream.ConsumeIntegral<Unicode>();
+   80|    951|    }
+   81|       |
+   82|     68|    GBool flag1 = stream.ConsumeBool(); // First boolean parameter
+   83|     68|    GBool flag2 = stream.ConsumeBool(); // Second boolean parameter
+   84|     68|    GBool flag3 = stream.ConsumeBool(); // Third boolean parameter
+   85|       |
+   86|       |    // Call the function under test
+   87|     68|	auto start_func = std::chrono::high_resolution_clock::now();//erase
+   88|     68|    splashOutputDev.drawChar(&gfxState, x, y, width, height, ascent, descent, charCode, fontSize, unicodeArray.data(), unicodeCount, flag1, flag2, flag3);
+   89|     68|	auto end_func = std::chrono::high_resolution_clock::now();//erase
+   90|     68|auto end_target = std::chrono::high_resolution_clock::now();//erase
+   91|     68|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;//erase
+   92|       |
+   93|     68|    return 0;
+   94|     68|}
+_ZN8GfxStateC2Ev:
+   17|     68|    GfxState() {
+   18|       |        // Initialize members
+   19|     68|        fontSize = 12; // Default font size
+   20|     68|        memset(fontName, 0, sizeof(fontName)); // Clear font name
+   21|     68|    }
+_ZN8GfxState11setFontSizeEi:
+   23|     68|    void setFontSize(int size) {
+   24|     68|        fontSize = size;
+   25|     68|    }
+_ZN8GfxState11setFontNameEPKc:
+   27|     68|    void setFontName(const char* name) {
+   28|     68|        strncpy(fontName, name, sizeof(fontName) - 1);
+   29|     68|        fontName[sizeof(fontName) - 1] = '\0'; // Ensure null-termination
+   30|     68|    }
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddjiPjibbb:
+   41|     68|                  GBool flag1, GBool flag2, GBool flag3) {
+   42|       |        // Implementation of drawChar (omitted for brevity)
+   43|       |        // For example, just printing the state (in a real implementation, this would do something meaningful)
+   44|     68|    }
+

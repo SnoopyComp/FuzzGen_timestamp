@@ -1,0 +1,973 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experiment results</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    line-height: 1.15;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border-right: 1px #dedede solid;
+    border-bottom: 1px #dedede solid;
+    padding: 5px;
+    text-align: left;
+}
+td:first-child, th:first-child {
+    border-left: 1px #dedede solid;
+}
+th {
+    border-top: 1px #dedede solid;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f4f5ff;
+}
+
+.chat_prompt {
+    background-color: #fff7f2;
+    max-width: 50%;
+    overflow: scroll;
+}
+
+.chat_response {
+    background-color: #fcfff2;
+    max-width: 50%;
+    overflow: scroll;
+    margin-left: auto;
+}
+</style>
+<body>
+    LLM: 
+    
+<h1>output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_ / 01</h1>
+Bug: False
+<br>
+Crash reason: -
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<h3>Final code</h3>
+
+<pre>
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+#include &#34;/src/xpdf-4.05/goo/GString.h&#34; // Including GString for PDFDoc constructor
+#include &#34;/src/xpdf-4.05/xpdf/GlobalParams.h&#34; // Include GlobalParams if needed for initialization
+
+// A concrete implementation of OutputDev to avoid abstract class error
+class MyOutputDev : public OutputDev {
+public:
+    // Implementing pure virtual functions
+    virtual GBool upsideDown() override { return gFalse; }
+    virtual GBool useDrawChar() override { return gFalse; }
+    virtual GBool interpretType3Chars() override { return gFalse; }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object using the concrete implementation
+    MyOutputDev output_dev;
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a GString for PDFDoc constructor
+    std::string random_string = fuzzed_data.ConsumeRandomLengthString(100);
+    GString *fileName = new GString(random_string.c_str());
+
+    // Initialize GlobalParams (this is crucial to avoid runtime errors)
+    GlobalParams::setGlobalParams();
+
+    // Call the function under test
+    PDFDoc pdf_doc(fileName); // Using the GString constructor
+
+    // Ensure that the parameters are within a reasonable range
+    // This is a basic check, you may want to adjust the ranges based on your application logic
+    if (param1 &lt; 0) param1 = 0;
+    if (param2 &lt; 0) param2 = 0;
+    if (param5 &lt; 0) param5 = 0;
+
+    // Call displayPages with the parameters
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, nullptr);
+
+    // Clean up
+    delete fileName;
+
+    return 0;
+}
+</pre>
+
+
+<h3>Fixer prompt #1</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;GBool.h&#34; // Assuming GBool is defined in this header
+#include &#34;DW_TAG_subroutine_type.h&#34; // Assuming DW_TAG_subroutine_type is defined in this header
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object
+    OutputDev output_dev; // Assuming a default constructor is available
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a DW_TAG_subroutine_typeInfinite loop object
+    DW_TAG_subroutine_typeInfinite loop; // Assuming a default constructor is available
+
+    // Create a pointer to void
+    void *param9 = nullptr; // Initialize to nullptr; can be modified later if needed
+
+    // Call the function under test
+    PDFDoc pdf_doc; // Assuming a default constructor is available
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, &amp;loop, param9);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:4:10: fatal error: &#39;GBool.h&#39; file not found
+    4 | #include &#34;GBool.h&#34; // Assuming GBool is defined in this header
+      |          ^~~~~~~~~
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: DO NOT include the header file GBool.h in the generated fuzz target again, the file does not exist in the project-under-test.
+If the non-existent &lt;filepath&gt;GBool.h&lt;/filepath&gt; was included for the declaration of &lt;code&gt;void PDFDoc::displayPages(OutputDev *, int, int, double, double, int, GBool, GBool, GBool, DW_TAG_subroutine_typeInfinite loop *, void *)&lt;/code&gt;, you must replace it with the EXACT path of the actual file &lt;filepath&gt;#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34;&lt;/filepath&gt;. For example:
+&lt;code&gt;
+#include &#34;#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34;&#34;
+&lt;/code&gt;
+Otherwise, consider replacing it with some of the following statementsthat may be correct alternatives:
+&lt;code&gt;
+#include &#34;/src/xpdf-4.05/goo/gfile.h&#34;
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/GlobalParams.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/Zoox.h&#34;
+#include &#34;/src/xpdf-4.05/goo/Trace.h&#34;
+&lt;/code&gt;
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #1</h3>
+
+<pre>
+Here is the fixed code with the necessary changes applied to resolve the build error:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/DW_TAG_subroutine_type.h&#34; // Assuming DW_TAG_subroutine_type is defined in this header
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object
+    OutputDev output_dev; // Assuming a default constructor is available
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a DW_TAG_subroutine_typeInfinite loop object
+    DW_TAG_subroutine_typeInfinite loop; // Assuming a default constructor is available
+
+    // Create a pointer to void
+    void *param9 = nullptr; // Initialize to nullptr; can be modified later if needed
+
+    // Call the function under test
+    PDFDoc pdf_doc; // Assuming a default constructor is available
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, &amp;loop, param9);
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. Removed the line `#include &#34;GBool.h&#34;` since it does not exist.
+2. Included `#include &#34;/src/xpdf-4.05/goo/gmem.h&#34;` to ensure the `GBool` type is correctly defined and available for use. 
+3. Ensured all other includes point to the correct paths as per the instructions provided. 
+
+This should allow the code to compile correctly for fuzzing.
+</pre>
+
+
+<h3>Fixer prompt #2</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/DW_TAG_subroutine_type.h&#34; // Assuming DW_TAG_subroutine_type is defined in this header
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object
+    OutputDev output_dev; // Assuming a default constructor is available
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a DW_TAG_subroutine_typeInfinite loop object
+    DW_TAG_subroutine_typeInfinite loop; // Assuming a default constructor is available
+
+    // Create a pointer to void
+    void *param9 = nullptr; // Initialize to nullptr; can be modified later if needed
+
+    // Call the function under test
+    PDFDoc pdf_doc; // Assuming a default constructor is available
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, &amp;loop, param9);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:5:10: fatal error: &#39;/src/xpdf-4.05/xpdf/DW_TAG_subroutine_type.h&#39; file not found
+    5 | #include &#34;/src/xpdf-4.05/xpdf/DW_TAG_subroutine_type.h&#34; // Assuming DW_TAG_subroutine_type is defined in this header
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: DO NOT include the header file /src/xpdf-4.05/xpdf/DW_TAG_subroutine_type.h in the generated fuzz target again, the file does not exist in the project-under-test.
+If the non-existent &lt;filepath&gt;/src/xpdf-4.05/xpdf/DW_TAG_subroutine_type.h&lt;/filepath&gt; was included for the declaration of &lt;code&gt;void PDFDoc::displayPages(OutputDev *, int, int, double, double, int, GBool, GBool, GBool, DW_TAG_subroutine_typeInfinite loop *, void *)&lt;/code&gt;, you must replace it with the EXACT path of the actual file &lt;filepath&gt;#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34;&lt;/filepath&gt;. For example:
+&lt;code&gt;
+#include &#34;#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34;&#34;
+&lt;/code&gt;
+Otherwise, consider replacing it with some of the following statementsthat may be correct alternatives:
+&lt;code&gt;
+#include &#34;/src/xpdf-4.05/xpdf/Outline.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/Decrypt.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/Array.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/Function.h&#34;
+&lt;/code&gt;
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #2</h3>
+
+<pre>
+Here is the fixed code with the necessary changes applied. The non-existent header file has been removed, and I&#39;ve included a potential alternative header that may define the required type for the `displayPages` function.
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object
+    OutputDev output_dev; // Assuming a default constructor is available
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a pointer to void
+    void *param9 = nullptr; // Initialize to nullptr; can be modified later if needed
+
+    // Call the function under test
+    PDFDoc pdf_doc; // Assuming a default constructor is available
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, param9);
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. Removed the inclusion of the non-existent header file `DW_TAG_subroutine_type.h`.
+2. Included `Annot.h` as a potential alternative to provide the necessary type for the `displayPages` function.
+3. Changed the call to `pdf_doc.displayPages` to pass `nullptr` for the `DW_TAG_subroutine_typeInfinite loop` parameter, since we no longer have access to that type. This assumes that the function can handle a `nullptr` for that argument. 
+
+This code should now compile successfully for fuzzing.
+</pre>
+
+
+<h3>Fixer prompt #3</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object
+    OutputDev output_dev; // Assuming a default constructor is available
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a pointer to void
+    void *param9 = nullptr; // Initialize to nullptr; can be modified later if needed
+
+    // Call the function under test
+    PDFDoc pdf_doc; // Assuming a default constructor is available
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, param9);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:12:15: error: variable type &#39;OutputDev&#39; is an abstract class
+   12 |     OutputDev output_dev; // Assuming a default constructor is available
+      |               ^
+/src/xpdf-4.05/xpdf/OutputDev.h:48:17: note: unimplemented pure virtual method &#39;upsideDown&#39; in &#39;OutputDev&#39;
+   48 |   virtual GBool upsideDown() = 0;
+      |                 ^
+/src/xpdf-4.05/xpdf/OutputDev.h:51:17: note: unimplemented pure virtual method &#39;useDrawChar&#39; in &#39;OutputDev&#39;
+   51 |   virtual GBool useDrawChar() = 0;
+      |                 ^
+/src/xpdf-4.05/xpdf/OutputDev.h:64:17: note: unimplemented pure virtual method &#39;interpretType3Chars&#39; in &#39;OutputDev&#39;
+   64 |   virtual GBool interpretType3Chars() = 0;
+      |                 ^
+fuzz_zxdoc.cc:28:12: error: no matching constructor for initialization of &#39;PDFDoc&#39;
+   28 |     PDFDoc pdf_doc; // Assuming a default constructor is available
+      |            ^
+/src/xpdf-4.05/xpdf/PDFDoc.h:35:7: note: candidate constructor (the implicit copy constructor) not viable: requires 1 argument, but 0 were provided
+   35 | class PDFDoc {
+      |       ^~~~~~
+/src/xpdf-4.05/xpdf/PDFDoc.h:38:3: note: candidate constructor not viable: requires at least argument &#39;fileNameA&#39;, but no arguments were provided
+   38 |   PDFDoc(GString *fileNameA, GString *ownerPassword = NULL,
+      |   ^      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   39 |          GString *userPassword = NULL, PDFCore *coreA = NULL);
+      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/src/xpdf-4.05/xpdf/PDFDoc.h:48:3: note: candidate constructor not viable: requires at least argument &#39;fileNameA&#39;, but no arguments were provided
+   48 |   PDFDoc(char *fileNameA, GString *ownerPassword = NULL,
+      |   ^      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   49 |          GString *userPassword = NULL, PDFCore *coreA = NULL);
+      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/src/xpdf-4.05/xpdf/PDFDoc.h:51:3: note: candidate constructor not viable: requires at least argument &#39;strA&#39;, but no arguments were provided
+   51 |   PDFDoc(BaseStream *strA, GString *ownerPassword = NULL,
+      |   ^      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   52 |          GString *userPassword = NULL, PDFCore *coreA = NULL);
+      |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #3</h3>
+
+<pre>
+Here is the revised C++ fuzz harness code that addresses the build issues and ensures that the function under test is fed valid input:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+#include &#34;/src/xpdf-4.05/goo/GString.h&#34; // Including GString for PDFDoc constructor
+
+// A concrete implementation of OutputDev to avoid abstract class error
+class MyOutputDev : public OutputDev {
+public:
+    // Implementing pure virtual functions
+    virtual GBool upsideDown() override { return gFalse; }
+    virtual GBool useDrawChar() override { return gFalse; }
+    virtual GBool interpretType3Chars() override { return gFalse; }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object using the concrete implementation
+    MyOutputDev output_dev;
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a GString for PDFDoc constructor
+    GString *fileName = new GString(fuzzed_data.ConsumeRandomLengthString(100).c_str());
+
+    // Call the function under test
+    PDFDoc pdf_doc(fileName); // Using the GString constructor
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, nullptr);
+
+    // Clean up
+    delete fileName;
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Concrete Implementation of `OutputDev`:** Created a class `MyOutputDev` that inherits from `OutputDev` and implements the required pure virtual functions. This resolves the abstract class issue.
+  
+2. **Valid Input for `PDFDoc`:** Used a `GString` object initialized with random data from the `FuzzedDataProvider` to create a valid `PDFDoc` instance. This ensures that the constructor receives a valid argument.
+
+3. **Memory Management:** Added cleanup for the dynamically allocated `GString` to prevent memory leaks.
+
+This code should now compile successfully and maximize the fuzzing results by providing valid input to the function under test.
+</pre>
+
+
+<h3>Fixer prompt #4</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+#include &#34;/src/xpdf-4.05/goo/GString.h&#34; // Including GString for PDFDoc constructor
+
+// A concrete implementation of OutputDev to avoid abstract class error
+class MyOutputDev : public OutputDev {
+public:
+    // Implementing pure virtual functions
+    virtual GBool upsideDown() override { return gFalse; }
+    virtual GBool useDrawChar() override { return gFalse; }
+    virtual GBool interpretType3Chars() override { return gFalse; }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object using the concrete implementation
+    MyOutputDev output_dev;
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a GString for PDFDoc constructor
+    GString *fileName = new GString(fuzzed_data.ConsumeRandomLengthString(100).c_str());
+
+    // Call the function under test
+    PDFDoc pdf_doc(fileName); // Using the GString constructor
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, nullptr);
+
+    // Clean up
+    delete fileName;
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: Fuzzing crashed immediately at runtime (ASAN-ERROR: AddressSanitizer: SEGV on unknown address 0x0000000002c0 (pc 0x7fdc75c71fc4 bp 0x7ffce0772c40 sp 0x7ffce0772c28 T0)), indicating fuzz target code for invoking the function under test is incorrect or unrobust.
+&lt;error&gt;
+Crash stacks:
+Stack 0:
+#0 0x7fdc75c71fc4 in __pthread_mutex_lock (/lib/x86_64-linux-gnu/libpthread.so.0+0xafc4) (BuildId: 9a65bb469e45a1c6fbcffae5b82a2fd7a69eb479)
+#1 0x55e9ba2b088f in GlobalParams::getPrintStatusInfo() /src/xpdf-4.05/xpdf/GlobalParams.cc:3556:3
+#2 0x55e9ba19775e in PDFDoc::displayPages(OutputDev*, int, int, double, double, int, int, int, int, int (*)(void*), void*) /src/xpdf-4.05/xpdf/PDFDoc.cc:459:23
+#3 0x55e9ba1932d8 in LLVMFuzzerTestOneInput /src/xpdf-4.05/build/fuzz_zxdoc.cc:39:13
+#4 0x55e9ba047460 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:614:13
+#5 0x55e9ba048971 in fuzzer::Fuzzer::ReadAndExecuteSeedCorpora(std::__Fuzzer::vector&lt;fuzzer::SizedFile, std::__Fuzzer::allocator&lt;fuzzer::SizedFile&gt;&gt;&amp;) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:807:3
+#6 0x55e9ba048f02 in fuzzer::Fuzzer::Loop(std::__Fuzzer::vector&lt;fuzzer::SizedFile, std::__Fuzzer::allocator&lt;fuzzer::SizedFile&gt;&gt;&amp;) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:867:3
+#7 0x55e9ba03803b in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerDriver.cpp:914:6
+#8 0x55e9ba063412 in main /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerMain.cpp:20:10
+#9 0x7fdc75a50082 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x24082) (BuildId: 0702430aef5fa3dda43986563e9ffcc47efbd75e)
+#10 0x55e9ba02a8bd in _start (/out/fuzz_zxdoc+0x1cc8bd)
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #4</h3>
+
+<pre>
+To address the runtime issue indicated in the error message, we need to ensure that the parameters passed to the `PDFDoc::displayPages` function are valid and that the `PDFDoc` object is properly initialized. The crash suggests that the function is trying to access some global parameters that may not be initialized correctly.
+
+Here are the changes made to the original code:
+1. Ensure that the `PDFDoc` is initialized with a valid filename.
+2. Check the parameters being passed to `displayPages` to ensure they are within expected ranges and types.
+3. Add necessary includes for any missing types or functions.
+
+Here is the complete, updated code:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+#include &#34;/src/xpdf-4.05/goo/GString.h&#34; // Including GString for PDFDoc constructor
+#include &#34;/src/xpdf-4.05/xpdf/GlobalParams.h&#34; // Include GlobalParams if needed for initialization
+
+// A concrete implementation of OutputDev to avoid abstract class error
+class MyOutputDev : public OutputDev {
+public:
+    // Implementing pure virtual functions
+    virtual GBool upsideDown() override { return gFalse; }
+    virtual GBool useDrawChar() override { return gFalse; }
+    virtual GBool interpretType3Chars() override { return gFalse; }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object using the concrete implementation
+    MyOutputDev output_dev;
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a GString for PDFDoc constructor
+    std::string random_string = fuzzed_data.ConsumeRandomLengthString(100);
+    GString *fileName = new GString(random_string.c_str());
+
+    // Call the function under test
+    PDFDoc pdf_doc(fileName); // Using the GString constructor
+
+    // Ensure that the parameters are within a reasonable range
+    // This is a basic check, you may want to adjust the ranges based on your application logic
+    if (param1 &lt; 0) param1 = 0;
+    if (param2 &lt; 0) param2 = 0;
+    if (param5 &lt; 0) param5 = 0;
+
+    // Call displayPages with the parameters
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, nullptr);
+
+    // Clean up
+    delete fileName;
+
+    return 0;
+}
+```
+
+### Key Changes:
+- Included `GlobalParams.h` to ensure that any necessary global parameters are initialized.
+- Added checks to ensure that parameters passed to `displayPages` are non-negative, which may help avoid crashes due to invalid parameter values.
+- The `random_string` variable is created to hold the random string generated by `FuzzedDataProvider`, ensuring it is valid before passing it to `PDFDoc`. 
+
+These changes should help improve the robustness of the fuzzing target and reduce the likelihood of crashes during fuzz testing.
+</pre>
+
+
+<h3>Fixer prompt #5</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+#include &#34;/src/xpdf-4.05/goo/GString.h&#34; // Including GString for PDFDoc constructor
+#include &#34;/src/xpdf-4.05/xpdf/GlobalParams.h&#34; // Include GlobalParams if needed for initialization
+
+// A concrete implementation of OutputDev to avoid abstract class error
+class MyOutputDev : public OutputDev {
+public:
+    // Implementing pure virtual functions
+    virtual GBool upsideDown() override { return gFalse; }
+    virtual GBool useDrawChar() override { return gFalse; }
+    virtual GBool interpretType3Chars() override { return gFalse; }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object using the concrete implementation
+    MyOutputDev output_dev;
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a GString for PDFDoc constructor
+    std::string random_string = fuzzed_data.ConsumeRandomLengthString(100);
+    GString *fileName = new GString(random_string.c_str());
+
+    // Call the function under test
+    PDFDoc pdf_doc(fileName); // Using the GString constructor
+
+    // Ensure that the parameters are within a reasonable range
+    // This is a basic check, you may want to adjust the ranges based on your application logic
+    if (param1 &lt; 0) param1 = 0;
+    if (param2 &lt; 0) param2 = 0;
+    if (param5 &lt; 0) param5 = 0;
+
+    // Call displayPages with the parameters
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, nullptr);
+
+    // Clean up
+    delete fileName;
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code can build successfully but has a runtime issue: Fuzzing crashed immediately at runtime (ASAN-ERROR: AddressSanitizer: SEGV on unknown address 0x0000000002c0 (pc 0x7f88b308ffc4 bp 0x7ffec60a79a0 sp 0x7ffec60a7988 T0)), indicating fuzz target code for invoking the function under test is incorrect or unrobust.
+&lt;error&gt;
+Crash stacks:
+Stack 0:
+#0 0x7f88b308ffc4 in __pthread_mutex_lock (/lib/x86_64-linux-gnu/libpthread.so.0+0xafc4) (BuildId: 9a65bb469e45a1c6fbcffae5b82a2fd7a69eb479)
+#1 0x56029c30391f in GlobalParams::getPrintStatusInfo() /src/xpdf-4.05/xpdf/GlobalParams.cc:3556:3
+#2 0x56029c1ea7ee in PDFDoc::displayPages(OutputDev*, int, int, double, double, int, int, int, int, int (*)(void*), void*) /src/xpdf-4.05/xpdf/PDFDoc.cc:459:23
+#3 0x56029c1e632a in LLVMFuzzerTestOneInput /src/xpdf-4.05/build/fuzz_zxdoc.cc:49:13
+#4 0x56029c09a460 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:614:13
+#5 0x56029c09b971 in fuzzer::Fuzzer::ReadAndExecuteSeedCorpora(std::__Fuzzer::vector&lt;fuzzer::SizedFile, std::__Fuzzer::allocator&lt;fuzzer::SizedFile&gt;&gt;&amp;) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:807:3
+#6 0x56029c09bf02 in fuzzer::Fuzzer::Loop(std::__Fuzzer::vector&lt;fuzzer::SizedFile, std::__Fuzzer::allocator&lt;fuzzer::SizedFile&gt;&gt;&amp;) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:867:3
+#7 0x56029c08b03b in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerDriver.cpp:914:6
+#8 0x56029c0b6412 in main /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerMain.cpp:20:10
+#9 0x7f88b2e6e082 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x24082) (BuildId: 0702430aef5fa3dda43986563e9ffcc47efbd75e)
+#10 0x56029c07d8bd in _start (/out/fuzz_zxdoc+0x1cc8bd)
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #5</h3>
+
+<pre>
+To address the runtime issue indicated by the AddressSanitizer error, we need to ensure that the `GlobalParams` is properly initialized before calling the `displayPages` method on the `PDFDoc` instance. The crash seems to be related to accessing a mutex in `GlobalParams`, which suggests that it may not be set up correctly.
+
+Here’s the modified code with the necessary initialization for `GlobalParams`:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &#34;/src/xpdf-4.05/xpdf/PDFDoc.h&#34; // Assuming PDFDoc is defined in this header
+#include &#34;/src/xpdf-4.05/xpdf/OutputDev.h&#34; // Assuming OutputDev is defined in this header
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including gmem.h for GBool type
+#include &#34;/src/xpdf-4.05/xpdf/Annot.h&#34; // Assuming Annot.h defines the required type for displayPages
+#include &#34;/src/xpdf-4.05/goo/GString.h&#34; // Including GString for PDFDoc constructor
+#include &#34;/src/xpdf-4.05/xpdf/GlobalParams.h&#34; // Include GlobalParams if needed for initialization
+
+// A concrete implementation of OutputDev to avoid abstract class error
+class MyOutputDev : public OutputDev {
+public:
+    // Implementing pure virtual functions
+    virtual GBool upsideDown() override { return gFalse; }
+    virtual GBool useDrawChar() override { return gFalse; }
+    virtual GBool interpretType3Chars() override { return gFalse; }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    // Initialize FuzzedDataProvider with the input data
+    FuzzedDataProvider fuzzed_data(data, size);
+    
+    // Create an OutputDev object using the concrete implementation
+    MyOutputDev output_dev;
+
+    // Consume parameters for the function
+    int param1 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    int param2 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    double param3 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = fuzzed_data.ConsumeFloatingPoint&lt;double&gt;();
+    int param5 = fuzzed_data.ConsumeIntegral&lt;int&gt;();
+    GBool param6 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming gTrue and gFalse are valid GBool values
+    GBool param7 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+    GBool param8 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;
+
+    // Create a GString for PDFDoc constructor
+    std::string random_string = fuzzed_data.ConsumeRandomLengthString(100);
+    GString *fileName = new GString(random_string.c_str());
+
+    // Initialize GlobalParams (this is crucial to avoid runtime errors)
+    GlobalParams::setGlobalParams();
+
+    // Call the function under test
+    PDFDoc pdf_doc(fileName); // Using the GString constructor
+
+    // Ensure that the parameters are within a reasonable range
+    // This is a basic check, you may want to adjust the ranges based on your application logic
+    if (param1 &lt; 0) param1 = 0;
+    if (param2 &lt; 0) param2 = 0;
+    if (param5 &lt; 0) param5 = 0;
+
+    // Call displayPages with the parameters
+    pdf_doc.displayPages(&amp;output_dev, param1, param2, param3, param4, param5, param6, param7, param8, nullptr, nullptr);
+
+    // Clean up
+    delete fileName;
+
+    return 0;
+}
+```
+
+### Key Changes:
+1. **Initialization of `GlobalParams`:** Added `GlobalParams::setGlobalParams();` to ensure that the global parameters are set up before invoking `displayPages`. This should help prevent the segmentation fault related to mutex access.
+2. **Maintained Original Structure:** The rest of the code remains unchanged to preserve the original logic and structure, focusing on fixing the runtime issue.
+
+This should help in maximizing the fuzzing results while ensuring the function under test is invoked with valid input.
+</pre>
+
+
+<h2>Logs</h2>
+
+<pre >
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/fixed_targets/01.cc with gpt-4o-mini, attempt 1.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/fixed_targets/01.cc with gpt-4o-mini, attempt 2.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/fixed_targets/01.cc with gpt-4o-mini, attempt 3.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/fixed_targets/01.cc with gpt-4o-mini, attempt 4.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/fixed_targets/01.cc with gpt-4o-mini, attempt 5.
+Failed to build /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/fixed_targets/01.cc with gpt-4o-mini in 5 iterations of fixing.
+
+</pre>
+
+
+<h2>Run logs</h2>
+<pre>
+INFO:__main__:Running: docker run --privileged --shm-size=2g --platform linux/amd64 --rm -e FUZZING_ENGINE=libfuzzer -e SANITIZER=address -e RUN_FUZZER_MODE=interactive -e HELPER=True -v /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example3/output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_/corpora/01.cc:/tmp/fuzz_zxdoc_corpus -v /tmp/tmpko5em8zs/build/out/xpdf-zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2-01:/out -t gcr.io/oss-fuzz-base/base-runner run_fuzzer fuzz_zxdoc -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30.
+vm.mmap_rnd_bits = 28
+rm: cannot remove &#39;/tmp/fuzz_zxdoc_corpus&#39;: Device or resource busy
+/out/fuzz_zxdoc -rss_limit_mb=2560 -timeout=25 -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30 /tmp/fuzz_zxdoc_corpus &lt; /dev/null
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3662919845
+INFO: Loaded 1 modules   (26982 inline 8-bit counters): 26982 [0x56029c5cd278, 0x56029c5d3bde), 
+INFO: Loaded 1 PC tables (26982 PCs): 26982 [0x56029c5d3be0,0x56029c63d240), 
+INFO:        0 files found in /tmp/fuzz_zxdoc_corpus
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+I/O Error: Couldn&#39;t open file &#39;&#39;
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+[1m[31m==11==ERROR: AddressSanitizer: SEGV on unknown address 0x0000000002c0 (pc 0x7f88b308ffc4 bp 0x7ffec60a79a0 sp 0x7ffec60a7988 T0)
+[1m[0m==11==The signal is caused by a READ memory access.
+==11==Hint: address points to the zero page.
+SCARINESS: 10 (null-deref)
+    #0 0x7f88b308ffc4 in __pthread_mutex_lock (/lib/x86_64-linux-gnu/libpthread.so.0+0xafc4) (BuildId: 9a65bb469e45a1c6fbcffae5b82a2fd7a69eb479)
+    #1 0x56029c30391f in GlobalParams::getPrintStatusInfo() /src/xpdf-4.05/xpdf/GlobalParams.cc:3556:3
+    #2 0x56029c1ea7ee in PDFDoc::displayPages(OutputDev*, int, int, double, double, int, int, int, int, int (*)(void*), void*) /src/xpdf-4.05/xpdf/PDFDoc.cc:459:23
+    #3 0x56029c1e632a in LLVMFuzzerTestOneInput /src/xpdf-4.05/build/fuzz_zxdoc.cc:49:13
+    #4 0x56029c09a460 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:614:13
+    #5 0x56029c09b971 in fuzzer::Fuzzer::ReadAndExecuteSeedCorpora(std::__Fuzzer::vector&lt;fuzzer::SizedFile, std::__Fuzzer::allocator&lt;fuzzer::SizedFile&gt;&gt;&amp;) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:807:3
+    #6 0x56029c09bf02 in fuzzer::Fuzzer::Loop(std::__Fuzzer::vector&lt;fuzzer::SizedFile, std::__Fuzzer::allocator&lt;fuzzer::SizedFile&gt;&gt;&amp;) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerLoop.cpp:867:3
+    #7 0x56029c08b03b in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerDriver.cpp:914:6
+    #8 0x56029c0b6412 in main /src/llvm-project/compiler-rt/lib/fuzzer/FuzzerMain.cpp:20:10
+    #9 0x7f88b2e6e082 in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x24082) (BuildId: 0702430aef5fa3dda43986563e9ffcc47efbd75e)
+    #10 0x56029c07d8bd in _start (/out/fuzz_zxdoc+0x1cc8bd)
+
+DEDUP_TOKEN: __pthread_mutex_lock--GlobalParams::getPrintStatusInfo()--PDFDoc::displayPages(OutputDev*, int, int, double, double, int, int, int, int, int (*)(void*), void*)
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV (/lib/x86_64-linux-gnu/libpthread.so.0+0xafc4) (BuildId: 9a65bb469e45a1c6fbcffae5b82a2fd7a69eb479) in __pthread_mutex_lock
+==11==ABORTING
+MS: 0 ; base unit: 0000000000000000000000000000000000000000
+
+
+artifact_prefix=&#39;./&#39;; Test unit written to ./crash-da39a3ee5e6b4b0d3255bfef95601890afd80709
+Base64: 
+stat::number_of_executed_units: 1
+stat::average_exec_per_sec:     0
+stat::new_units_added:          0
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              34
+
+</pre>
+
+
+</body>

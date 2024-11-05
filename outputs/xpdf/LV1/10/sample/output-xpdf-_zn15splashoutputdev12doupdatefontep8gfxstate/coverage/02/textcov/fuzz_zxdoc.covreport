@@ -1,0 +1,41 @@
+LLVMFuzzerTestOneInput:
+   32|     23|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   33|     23|auto start_target = std::chrono::high_resolution_clock::now();//erase
+   34|       |    // Create a FuzzedDataProvider to consume the input data.
+   35|     23|    FuzzedDataProvider fuzzed_data(data, size);
+   36|       |
+   37|       |    // Initialize GfxState instance.
+   38|     23|    GfxState gfxState;
+   39|       |
+   40|       |    // Fill the GfxState instance with fuzzed data.
+   41|     23|    gfxState.someInt = fuzzed_data.ConsumeIntegral<int>();
+   42|     23|    gfxState.someFloat = fuzzed_data.ConsumeFloatingPoint<float>();
+   43|       |
+   44|       |    // Consume a random length string and ensure it fits in the buffer.
+   45|     23|    std::string randomString = fuzzed_data.ConsumeRandomLengthString();
+   46|     23|    size_t stringLength = std::min(randomString.size(), sizeof(gfxState.someString) - 1);
+   47|     23|    memcpy(gfxState.someString, randomString.c_str(), stringLength);
+   48|     23|    gfxState.someString[stringLength] = '\0'; // Ensure null termination.
+   49|       |
+   50|       |    // Create an instance of SplashOutputDev.
+   51|     23|    SplashOutputDev splashOutputDev;
+   52|       |
+   53|       |    // Call the function under test.
+   54|     23|	auto start_func = std::chrono::high_resolution_clock::now();//erase
+   55|     23|    splashOutputDev.doUpdateFont(&gfxState);
+   56|     23|	auto end_func = std::chrono::high_resolution_clock::now();//erase
+   57|     23|auto end_target = std::chrono::high_resolution_clock::now();//erase
+   58|     23|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;//erase
+   59|       |
+   60|     23|    return 0;
+   61|     23|}
+_ZN8GfxStateC2Ev:
+   18|     23|    GfxState() : someInt(0), someFloat(0.0f) {
+   19|       |        // Initialize the string to avoid null values.
+   20|     23|        someString[0] = '\0';
+   21|     23|    }
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   27|     23|    void doUpdateFont(GfxState *state) {
+   28|       |        // Function implementation goes here.
+   29|     23|    }
+

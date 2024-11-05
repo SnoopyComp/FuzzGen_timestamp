@@ -30,6 +30,6 @@ do
 	-y ./benchmark-sets/all/${library_name}.yaml\
 	--work-dir=results/${library_name}/${directory_name}$var
 
-	python3.11 -m report.web -r results/${library_name}/${directory_name}$var -o outputs/${library_name}/${directory_name}$var
+	python3.11 -m report.web -r results/${library_name}/${directory_name}/$var -o outputs/${library_name}/${directory_name}$var
 #	python3.11 -m http.server 2222 -d outputs/${library_name}/${directory_name}$var
 done

@@ -25,7 +25,9 @@ do
 	./run_all_experiments.py\
 	--model='gpt-4o-mini'\
 	-y ./benchmark-sets/all/${library_name}.yaml\
-	--work-dir=results/${library_name}/${directory_name}$var
+	--work-dir=results/${library_name}/${directory_name}/$var
 
-	python3.11 -m report.web -r results/${library_name}/${directory_name}$var -o outputs/${library_name}/${directory_name}$var
+	python3.11 -m report.web -r results/${library_name}/${directory_name}/$var -o outputs/${library_name}/${directory_name}/$var
 done
+
+./evaluate_output.py ${library_name} ${directory_name} $2

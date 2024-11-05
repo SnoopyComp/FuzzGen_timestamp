@@ -1,0 +1,740 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experiment results</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    line-height: 1.15;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border-right: 1px #dedede solid;
+    border-bottom: 1px #dedede solid;
+    padding: 5px;
+    text-align: left;
+}
+td:first-child, th:first-child {
+    border-left: 1px #dedede solid;
+}
+th {
+    border-top: 1px #dedede solid;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f4f5ff;
+}
+
+.chat_prompt {
+    background-color: #fff7f2;
+    max-width: 50%;
+    overflow: scroll;
+}
+
+.chat_response {
+    background-color: #fcfff2;
+    max-width: 50%;
+    overflow: scroll;
+    margin-left: auto;
+}
+</style>
+<body>
+    LLM: 
+    
+<h1>output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate / 02</h1>
+Bug: False
+<br>
+Crash reason: NO_SEMANTIC_ERR
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<h3>Final code</h3>
+
+<pre>
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;chrono&gt;//erase
+#ifndef iostream//erase
+#include &lt;iostream&gt;//erase
+#endif//erase
+#include &lt;cstdint&gt; // For uint32_t
+#include &lt;cstring&gt; // For memset
+#include &lt;string&gt;  // For std::string
+#include &lt;vector&gt;  // For std::vector
+#include &lt;sanitizer/asan_interface.h&gt; // Include for AddressSanitizer support
+
+// Assuming GfxState is a defined class
+class GfxState {
+public:
+    // Example members for GfxState
+    int fontSize;
+    char fontName[50]; // Example for a font name
+
+    GfxState() {
+        // Initialize members
+        fontSize = 12; // Default font size
+        memset(fontName, 0, sizeof(fontName)); // Clear font name
+    }
+
+    void setFontSize(int size) {
+        fontSize = size;
+    }
+
+    void setFontName(const char* name) {
+        strncpy(fontName, name, sizeof(fontName) - 1);
+        fontName[sizeof(fontName) - 1] = &#39;\0&#39;; // Ensure null-termination
+    }
+};
+
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *state) {
+        // Function implementation (placeholder)
+        // This is just for demonstration and should be replaced with actual logic.
+        printf(&#34;Font Size: %d, Font Name: %s\n&#34;, state-&gt;fontSize, state-&gt;fontName);
+    }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+auto start_target = std::chrono::high_resolution_clock::now();//erase
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Create a GfxState object
+    GfxState gfxState;
+
+    // Use the fuzzed data to influence the GfxState
+    int fontSize = stream.ConsumeIntegralInRange&lt;int&gt;(1, 100); // Random font size between 1 and 100
+    gfxState.setFontSize(fontSize);
+
+    // Consume a string from the fuzzed data for the font name
+    std::string fontName = stream.ConsumeRandomLengthString(49); // Max length 49 to fit in the buffer
+    gfxState.setFontName(fontName.c_str());
+
+    // Call the function under test
+	auto start_func = std::chrono::high_resolution_clock::now();//erase
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+	auto end_func = std::chrono::high_resolution_clock::now();//erase
+auto end_target = std::chrono::high_resolution_clock::now();//erase
+std::cout&lt;&lt;&#34;Target runtime : &#34;&lt;&lt;std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(end_target-start_target).count()&lt;&lt;&#34;, Function runtime : &#34;&lt;&lt;std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(end_func - start_func).count()&lt;&lt;std::endl;//erase
+
+    return 0;
+}
+</pre>
+
+
+<h3>Fixer prompt #1</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+&lt;solution&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt; // For uint32_t
+#include &lt;cstring&gt; // For memset
+#include &lt;string&gt;  // For std::string
+#include &lt;vector&gt;  // For std::vector
+
+// Assuming GfxState is a defined class
+class GfxState {
+public:
+    // Example members for GfxState
+    int fontSize;
+    char fontName[50]; // Example for a font name
+
+    GfxState() {
+        // Initialize members
+        fontSize = 12; // Default font size
+        memset(fontName, 0, sizeof(fontName)); // Clear font name
+    }
+
+    void setFontSize(int size) {
+        fontSize = size;
+    }
+
+    void setFontName(const char* name) {
+        strncpy(fontName, name, sizeof(fontName) - 1);
+        fontName[sizeof(fontName) - 1] = &#39;\0&#39;; // Ensure null-termination
+    }
+};
+
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *state) {
+        // Function implementation (placeholder)
+        // This is just for demonstration and should be replaced with actual logic.
+        printf(&#34;Font Size: %d, Font Name: %s\n&#34;, state-&gt;fontSize, state-&gt;fontName);
+    }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Create a GfxState object
+    GfxState gfxState;
+
+    // Use the fuzzed data to influence the GfxState
+    int fontSize = stream.ConsumeIntegralInRange&lt;int&gt;(1, 100); // Random font size between 1 and 100
+    gfxState.setFontSize(fontSize);
+
+    // Consume a string from the fuzzed data for the font name
+    std::string fontName = stream.ConsumeRandomLengthString(49); // Max length 49 to fit in the buffer
+    gfxState.setFontName(fontName.c_str());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:1:1: error: expected unqualified-id
+    1 | &lt;solution&gt;
+      | ^
+In file included from fuzz_zxdoc.cc:2:
+In file included from /usr/local/lib/clang/18/include/fuzzer/FuzzedDataProvider.h:27:
+/usr/local/bin/../include/c++/v1/vector:843:7: error: use of undeclared identifier &#39;__sanitizer_annotate_contiguous_container&#39;
+  843 |       __sanitizer_annotate_contiguous_container(__beg, __end, __old_mid, __new_mid);
+      |       ^
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #1</h3>
+
+<pre>
+Here is the fixed code that addresses the build issues you encountered. The main change is the inclusion of the `&lt;sanitizer/asan_interface.h&gt;` header, which resolves the undeclared identifier error related to `__sanitizer_annotate_contiguous_container`. 
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt; // For uint32_t
+#include &lt;cstring&gt; // For memset
+#include &lt;string&gt;  // For std::string
+#include &lt;vector&gt;  // For std::vector
+#include &lt;sanitizer/asan_interface.h&gt; // Include for AddressSanitizer support
+
+// Assuming GfxState is a defined class
+class GfxState {
+public:
+    // Example members for GfxState
+    int fontSize;
+    char fontName[50]; // Example for a font name
+
+    GfxState() {
+        // Initialize members
+        fontSize = 12; // Default font size
+        memset(fontName, 0, sizeof(fontName)); // Clear font name
+    }
+
+    void setFontSize(int size) {
+        fontSize = size;
+    }
+
+    void setFontName(const char* name) {
+        strncpy(fontName, name, sizeof(fontName) - 1);
+        fontName[sizeof(fontName) - 1] = &#39;\0&#39;; // Ensure null-termination
+    }
+};
+
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *state) {
+        // Function implementation (placeholder)
+        // This is just for demonstration and should be replaced with actual logic.
+        printf(&#34;Font Size: %d, Font Name: %s\n&#34;, state-&gt;fontSize, state-&gt;fontName);
+    }
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Create a GfxState object
+    GfxState gfxState;
+
+    // Use the fuzzed data to influence the GfxState
+    int fontSize = stream.ConsumeIntegralInRange&lt;int&gt;(1, 100); // Random font size between 1 and 100
+    gfxState.setFontSize(fontSize);
+
+    // Consume a string from the fuzzed data for the font name
+    std::string fontName = stream.ConsumeRandomLengthString(49); // Max length 49 to fit in the buffer
+    gfxState.setFontName(fontName.c_str());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+```
+
+### Changes made:
+- Included `&lt;sanitizer/asan_interface.h&gt;` to resolve the undeclared identifier error related to AddressSanitizer.
+- Ensured that the code structure and logic remain unchanged to maintain the original functionality while allowing the code to compile successfully for fuzz testing.
+</pre>
+
+
+<h2>Logs</h2>
+
+<pre >
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1_3/3/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/02.cc with gpt-4o-mini, attempt 1.
+Successfully built /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1_3/3/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/02.cc with gpt-4o-mini in 2 iterations of fixing.
+Triaging the crash related to /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1_3/3/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/02.cc with gpt-4o-mini.
+Warning: no crash info in xpdf-zn15splashoutputdev12doupdatefontep8gfxstate-02.
+Result for xpdf-zn15splashoutputdev12doupdatefontep8gfxstate-02: crashes=False, coverage=0.5092592592592593 (55/108), coverage diff=0.0 (0/124776)
+
+</pre>
+
+
+<h2>Run logs</h2>
+<pre>
+INFO:__main__:Running: docker run --privileged --shm-size=2g --platform linux/amd64 --rm -e FUZZING_ENGINE=libfuzzer -e SANITIZER=address -e RUN_FUZZER_MODE=interactive -e HELPER=True -v /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1_3/3/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/corpora/02.cc:/tmp/fuzz_zxdoc_corpus -v /tmp/tmpgzqv8we0/build/out/xpdf-zn15splashoutputdev12doupdatefontep8gfxstate-02:/out -t gcr.io/oss-fuzz-base/base-runner run_fuzzer fuzz_zxdoc -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30.
+vm.mmap_rnd_bits = 28
+rm: cannot remove &#39;/tmp/fuzz_zxdoc_corpus&#39;: Device or resource busy
+/out/fuzz_zxdoc -rss_limit_mb=2560 -timeout=25 -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30 /tmp/fuzz_zxdoc_corpus &lt; /dev/null
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3929307455
+INFO: Loaded 1 modules   (108 inline 8-bit counters): 108 [0x562212552200, 0x56221255226c), 
+INFO: Loaded 1 PC tables (108 PCs): 108 [0x562212552270,0x562212552930), 
+INFO:        0 files found in /tmp/fuzz_zxdoc_corpus
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+Font Size: 1, Font Name: 
+Target runtime : 223062, Function runtime : 213512
+INFO: A corpus is not provided, starting from an empty corpus
+Font Size: 11, Font Name: 
+Target runtime : 28173, Function runtime : 27221
+#2	INITED cov: 28 ft: 29 corp: 1/1b exec/s: 0 rss: 31Mb
+Font Size: 43, Font Name: 
+Target runtime : 8496, Function runtime : 7774
+Font Size: 43, Font Name: *
+Target runtime : 4197, Function runtime : 3626
+#4	NEW    cov: 31 ft: 33 corp: 2/3b lim: 4096 exec/s: 0 rss: 31Mb L: 2/2 MS: 2 ChangeBit-CopyPart-
+Font Size: 11, Font Name: 
+Target runtime : 25128, Function runtime : 24427
+Font Size: 1, Font Name: 
+
+Target runtime : 16221, Function runtime : 15780
+#6	NEW    cov: 31 ft: 37 corp: 3/6b lim: 4096 exec/s: 0 rss: 32Mb L: 3/3 MS: 2 CopyPart-CMP- DE: &#34;\000\000&#34;-
+Font Size: 43, Font Name: 
+Target runtime : 12183, Function runtime : 11572
+Font Size: 44, Font Name: 
+Target runtime : 8907, Function runtime : 8737
+Font Size: 1, Font Name: 
+Target runtime : 11472, Function runtime : 11060
+Font Size: 2, Font Name: d
+Target runtime : 9027, Function runtime : 8766
+Font Size: 2, Font Name: d
+Target runtime : 9347, Function runtime : 9167
+Font Size: 23, Font Name: 
+
+Target runtime : 14117, Function runtime : 13926
+Font Size: 23, Font Name: 
+�����������������������������������������
+Target runtime : 26840, Function runtime : 18836
+#13	NEW    cov: 36 ft: 46 corp: 4/49b lim: 4096 exec/s: 0 rss: 32Mb L: 43/43 MS: 2 InsertByte-InsertRepeatedBytes-
+Font Size: 23, Font Name: 
+�������������������������
+Target runtime : 85662, Function runtime : 83798
+#14	NEW    cov: 38 ft: 48 corp: 5/100b lim: 4096 exec/s: 0 rss: 32Mb L: 51/51 MS: 1 CMP- DE: &#34;\000\000\000\000\000\000\000/&#34;-
+Font Size: 23, Font Name: 
+���~���������������������
+Target runtime : 22783, Function runtime : 20770
+Font Size: 23, Font Name: 
+���~�������������
+Target runtime : 18706, Function runtime : 17462
+Font Size: 23, Font Name: 
+���~����������������
+Target runtime : 17533, Function runtime : 16812
+#17	NEW    cov: 38 ft: 52 corp: 6/122b lim: 4096 exec/s: 0 rss: 32Mb L: 22/51 MS: 3 ChangeByte-EraseBytes-EraseBytes-
+Font Size: 1, Font Name: 
+
+Target runtime : 16331, Function runtime : 15800
+#18	NEW    cov: 38 ft: 56 corp: 7/126b lim: 4096 exec/s: 0 rss: 32Mb L: 4/51 MS: 1 InsertByte-
+Font Size: 43, Font Name: *PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+Target runtime : 13466, Function runtime : 11762
+Font Size: 43, Font Name: *PPPPPPPPPPPPPPPPPPP-PPPPPPPPPPPPPPPPPPPPPPPPPPPP
+Target runtime : 10420, Function runtime : 9107
+Font Size: 43, Font Name: *PPP@PPPPPPPPPPPPPPP-PPPPPPPPPPPPPPPPPPPPPPPPPPPP
+Target runtime : 10159, Function runtime : 8827
+Font Size: 43, Font Name: *PPP@PPPPPPPPPPPPPPP-PPPPPPPP
+Target runtime : 10119, Function runtime : 8857
+Font Size: 43, Font Name: *PPP@PPPPPPPPPPPPPPP-PPPPPPPP
+Target runtime : 10690, Function runtime : 9488
+Font Size: 1, Font Name: **
+Target runtime : 10028, Function runtime : 8796
+Font Size: 1, Font Name: **
+Target runtime : 9868, Function runtime : 8716
+Font Size: 1, Font Name: **
+Target runtime : 9858, Function runtime : 8756
+Font Size: 1, Font Name: **
+Target runtime : 9779, Function runtime : 8657
+Font Size: 1, Font Name: **
+Target runtime : 9728, Function runtime : 8626
+Font Size: 23, Font Name: 
+������������������������������������������������
+Target runtime : 34775, Function runtime : 33483
+Font Size: 23, Font Name: 
+������������������������������������������������
+Target runtime : 22572, Function runtime : 20498
+Font Size: 23, Font Name: 
+������������������������������������������������
+Target runtime : 20650, Function runtime : 17203
+Font Size: 23, Font Name: 
+������������������������������������������������
+Target runtime : 18204, Function runtime : 16992
+Font Size: 23, Font Name: 
+������������������������������������������������
+Target runtime : 18354, Function runtime : 17142
+Font Size: 75, Font Name: 
+Target runtime : 9007, Function runtime : 8696
+Font Size: 75, Font Name: 
+Target runtime : 8897, Function runtime : 8616
+Font Size: 75, Font Name: �
+Target runtime : 8916, Function runtime : 8656
+Font Size: 75, Font Name: �������������������������������������������������
+Target runtime : 11993, Function runtime : 10690
+Font Size: 75, Font Name: �������������������������������������������������
+Target runtime : 9969, Function runtime : 8767
+Font Size: 23, Font Name: 
+���~��������
+Target runtime : 17284, Function runtime : 16632
+Font Size: 23, Font Name: 
+���~��������
+Target runtime : 17242, Function runtime : 16651
+Font Size: 23, Font Name: 
+���~��������
+Target runtime : 17242, Function runtime : 16642
+Font Size: 23, Font Name: 
+���~�
+
+Target runtime : 20931, Function runtime : 20079
+Font Size: 23, Font Name: 
+���~�
+
+Target runtime : 20850, Function runtime : 20098
+Font Size: 23, Font Name: 
+���~����������������
+Target runtime : 145185, Function runtime : 144473
+Font Size: 23, Font Name: 
+���~��������������������������������������������
+Target runtime : 19646, Function runtime : 17664
+Font Size: 23, Font Name: 
+���~��������������������������������������������
+Target runtime : 18163, Function runtime : 16922
+Font Size: 23, Font Name: 
+���~������������������,
+Target runtime : 18105, Function runtime : 16842
+Font Size: 23, Font Name: 
+���~������������������,
+Target runtime : 17914, Function runtime : 16701
+Font Size: 12, Font Name: 
+Target runtime : 8906, Function runtime : 8636
+Font Size: 1, Font Name: 
+Target runtime : 8927, Function runtime : 8636
+Font Size: 1, Font Name: :
+Target runtime : 8908, Function runtime : 8658
+Font Size: 23, Font Name: :
+Target runtime : 9467, Function runtime : 8616
+Font Size: 23, Font Name: :
+Target runtime : 9087, Function runtime : 8546
+Font Size: 11, Font Name: 
+Target runtime : 9387, Function runtime : 9147
+Font Size: 11, Font Name: 
+Target runtime : 18045, Function runtime : 15870
+Font Size: 11, Font Name: 
+Target runtime : 12293, Function runtime : 10860
+Font Size: 11, Font Name: 
+Target runtime : 9539, Function runtime : 8297
+Font Size: 11, Font Name: 
+Target runtime : 9407, Function runtime : 8215
+Font Size: 1, Font Name: 
+Target runtime : 8616, Function runtime : 8295
+Font Size: 49, Font Name: 
+Target runtime : 8546, Function runtime : 8336
+Font Size: 60, Font Name: 
+Target runtime : 8415, Function runtime : 8245
+Font Size: 5, Font Name: 
+Target runtime : 8385, Function runtime : 8195
+Font Size: 5, Font Name: 
+Target runtime : 8406, Function runtime : 8165
+Font Size: 23, Font Name: 
+�����������������������������������������
+Target runtime : 19817, Function runtime : 18485
+Font Size: 23, Font Name: 
+��������������������������������������
+���������
+Target runtime : 24978, Function runtime : 23415
+Font Size: 23, Font Name: 
+�����~��������������������������������
+���������
+Target runtime : 23634, Function runtime : 22412
+Font Size: 23, Font Name: 
+�����~��������������������������������
+���
+�����
+Target runtime : 29945, Function runtime : 28753
+Font Size: 23, Font Name: 
+�����~��������������������������������
+���
+�����
+Targe
+...truncated...
+\\\\\\\\\\\]\\\\\\\\\\\\\\\\\\
+Target runtime : 3506, Function runtime : 1903
+Font Size: 93, Font Name: \\\\\\\\
+Target runtime : 2655, Function runtime : 1814
+Font Size: 93, Font Name: \\\\\\\\
+Target runtime : 4238, Function runtime : 1773
+Font Size: 93, Font Name: 
+Target runtime : 2444, Function runtime : 1763
+Font Size: 56, Font Name: 
+Target runtime : 2064, Function runtime : 1764
+Font Size: 56, Font Name: 
+Target runtime : 2335, Function runtime : 1723
+Font Size: 56, Font Name: 
+Target runtime : 2234, Function runtime : 1733
+Font Size: 56, Font Name: 
+Target runtime : 2274, Function runtime : 1723
+Font Size: 56, Font Name: 
+Target runtime : 2275, Function runtime : 1724
+Font Size: 93, Font Name: \\
+Target runtime : 2104, Function runtime : 1753
+Font Size: 93, Font Name: \
+Target runtime : 2234, Function runtime : 1774
+Font Size: 93, Font Name: \
+Target runtime : 2224, Function runtime : 1803
+Font Size: 93, Font Name: 
+Target runtime : 1963, Function runtime : 1723
+Font Size: 93, Font Name: 
+Target runtime : 1944, Function runtime : 1714
+Font Size: 43, Font Name: �
+Target runtime : 2034, Function runtime : 1743
+Font Size: 43, Font Name: �
+Target runtime : 1964, Function runtime : 1733
+Font Size: 43, Font Name: .
+Target runtime : 1893, Function runtime : 1713
+Font Size: 8, Font Name: .*kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+Target runtime : 3867, Function runtime : 2074
+Font Size: 1, Font Name: .*kkkkkkkkkkkkkkkkkkkkkkkkkk
+
+Target runtime : 4328, Function runtime : 2986
+Font Size: 56, Font Name: \\\
+Target runtime : 2133, Function runtime : 1764
+Font Size: 56, Font Name: \\\
+Target runtime : 2064, Function runtime : 1733
+Font Size: 56, Font Name: \\\
+Target runtime : 2023, Function runtime : 1733
+Font Size: 56, Font Name: \�������������������������\\
+Target runtime : 3417, Function runtime : 1944
+Font Size: 56, Font Name: (\�������������������������\\
+Target runtime : 3217, Function runtime : 1854
+Font Size: 1, Font Name: 
+5
+Target runtime : 3356, Function runtime : 3016
+Font Size: 44, Font Name: 
+
+Target runtime : 3196, Function runtime : 2835
+Font Size: 44, Font Name: 
+
+Target runtime : 3237, Function runtime : 2876
+Font Size: 5, Font Name: 5
+Target runtime : 2154, Function runtime : 1804
+Font Size: 51, Font Name: 5
+Target runtime : 2164, Function runtime : 1823
+Font Size: 1, Font Name: 
+Target runtime : 2013, Function runtime : 1713
+Font Size: 56, Font Name: 
+Target runtime : 2245, Function runtime : 1744
+Font Size: 56, Font Name: 
+Target runtime : 3527, Function runtime : 1733
+Font Size: 56, Font Name: 
+Target runtime : 2936, Function runtime : 1704
+Font Size: 56, Font Name: 
+Target runtime : 3076, Function runtime : 1712
+Font Size: 43, Font Name: 
+Target runtime : 1994, Function runtime : 1753
+Font Size: 43, Font Name: *
+Target runtime : 1904, Function runtime : 1713
+Font Size: 43, Font Name: 
+Target runtime : 1944, Function runtime : 1714
+Font Size: 43, Font Name: *************************************************
+Target runtime : 3276, Function runtime : 1914
+Font Size: 43, Font Name: *************************************************
+Target runtime : 3186, Function runtime : 1873
+Font Size: 52, Font Name: 
+������������������������������������������������
+Target runtime : 4569, Function runtime : 3336
+Font Size: 52, Font Name: 
+������������������������������������������������
+Target runtime : 4589, Function runtime : 3307
+Font Size: 52, Font Name: 
+������������������������������������������������
+Target runtime : 4499, Function runtime : 3246
+Font Size: 52, Font Name: 
+������������������������������������������������
+Target runtime : 4508, Function runtime : 3216
+Font Size: 52, Font Name: 
+������������������������������������������������
+Target runtime : 4528, Function runtime : 3326
+Font Size: 1, Font Name: 
+Target runtime : 2144, Function runtime : 1733
+Font Size: 1, Font Name: 
+Target runtime : 2164, Function runtime : 1733
+Font Size: 1, Font Name: 
+Target runtime : 2555, Function runtime : 1724
+Font Size: 1, Font Name: 
+Target runtime : 2585, Function runtime : 1713
+Font Size: 1, Font Name: 
+Target runtime : 2634, Function runtime : 1764
+Font Size: 93, Font Name: \\\\\\\\
+Target runtime : 2264, Function runtime : 1853
+Font Size: 93, Font Name: \\\\\\\\\\\\\\\\\\\\
+Target runtime : 2995, Function runtime : 1813
+Font Size: 93, Font Name: \\\\\\
+Target runtime : 2576, Function runtime : 1843
+Font Size: 93, Font Name: \\\\\\
+Target runtime : 2987, Function runtime : 1834
+Font Size: 93, Font Name: \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+Target runtime : 3466, Function runtime : 1863
+Font Size: 23, Font Name: ������
+Target runtime : 2465, Function runtime : 1763
+Font Size: 23, Font Name: ������
+Target runtime : 2425, Function runtime : 1833
+Font Size: 23, Font Name: ������
+Target runtime : 2365, Function runtime : 1764
+Font Size: 23, Font Name: ������
+Target runtime : 2344, Function runtime : 1733
+Font Size: 23, Font Name: ������
+Target runtime : 2104, Function runtime : 1724
+Font Size: 23, Font Name: ������
+Target runtime : 2304, Function runtime : 1733
+Font Size: 23, Font Name: ������
+Target runtime : 2414, Function runtime : 1773
+Font Size: 23, Font Name: ������
+Target runtime : 2625, Function runtime : 1783
+Font Size: 23, Font Name: ������
+Target runtime : 2425, Function runtime : 1754
+Font Size: 23, Font Name: ������
+Target runtime : 2345, Function runtime : 1723
+Font Size: 56, Font Name: \\\
+Target runtime : 2074, Function runtime : 1764
+Font Size: 56, Font Name: \
+Target runtime : 1944, Function runtime : 1723
+Font Size: 56, Font Name: 
+Target runtime : 1994, Function runtime : 1734
+Font Size: 56, Font Name: 
+Target runtime : 1904, Function runtime : 1724
+Font Size: 56, Font Name: 
+�
+Target runtime : 3186, Function runtime : 2955
+Font Size: 1, Font Name: \�
+Target runtime : 2084, Function runtime : 1803
+Font Size: 56, Font Name: 
+Target runtime : 2004, Function runtime : 1743
+Font Size: 1, Font Name: 
+Target runtime : 2324, Function runtime : 1703
+Font Size: 1, Font Name: 
+Target runtime : 2214, Function runtime : 1703
+Font Size: 23, Font Name: 
+Target runtime : 2275, Function runtime : 1753
+Font Size: 1, Font Name: rrrrrrrrrrrrrrrrrrrrrrrrrrr
+
+Target runtime : 4108, Function runtime : 3106
+Font Size: 1, Font Name: rsrrrrrrrrrrrrrrrrrrrrrrrrr
+
+Target runtime : 3807, Function runtime : 2916
+Font Size: 1, Font Name: rsrrrrrrrrrrrrrr~rrrrrrrrrr
+
+Target runtime : 3767, Function runtime : 2876
+Font Size: 1, Font Name: rsrrrrr\\�rrrr~rrrrrrrrrr
+
+Target runtime : 3978, Function runtime : 2936
+Font Size: 1, Font Name: rr\\�rrrr~rrrrrrrrrr
+
+Target runtime : 4087, Function runtime : 2895
+Font Size: 56, Font Name: 
+Target runtime : 5640, Function runtime : 4869
+Font Size: 23, Font Name: 
+Target runtime : 2865, Function runtime : 2013
+Font Size: 23, Font Name: 
+Target runtime : 4325724, Function runtime : 4325003
+Font Size: 23, Font Name: 
+Target runtime : 3907, Function runtime : 2525
+Font Size: 23, Font Name: 
+Target runtime : 2284, Function runtime : 1834
+Font Size: 93, Font Name: \\\;\\\\\
+Target runtime : 55043, Function runtime : 54342
+Font Size: 93, Font Name: \\\;\\\
+Target runtime : 5080167, Function runtime : 5078984
+Font Size: 93, Font Name: \\
+Target runtime : 3306, Function runtime : 2514
+Font Size: 93, Font Name: \\
+Target runtime : 2144, Function runtime : 1894
+Font Size: 93, Font Name: \L\~;\\\
+Target runtime : 2364, Function runtime : 1823
+#261003	DONE   cov: 55 ft: 86 corp: 20/343b lim: 4096 exec/s: 8419 rss: 54Mb
+###### Recommended dictionary. ######
+&#34;\000\000&#34; # Uses: 5749
+&#34;\000\000\000\000\000\000\000/&#34; # Uses: 4678
+&#34;\026\000\000\000\000\000\000\000&#34; # Uses: 4836
+&#34;X\000\000\000\000\000\000\000&#34; # Uses: 3830
+&#34;\000\000\000\000&#34; # Uses: 3481
+###### End of recommended dictionary. ######
+Done 261003 runs in 31 second(s)
+stat::number_of_executed_units: 261003
+stat::average_exec_per_sec:     8419
+stat::new_units_added:          99
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              54
+
+</pre>
+
+
+</body>

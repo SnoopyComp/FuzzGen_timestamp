@@ -1,0 +1,45 @@
+LLVMFuzzerTestOneInput:
+   25|     26|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   26|     26|auto start_target = std::chrono::high_resolution_clock::now();
+   27|     26|    FuzzedDataProvider stream(data, size);
+   28|       |
+   29|       |    // Initialize parameters for the function call
+   30|     26|    OutputDev outputDev; // Assuming a default constructor is available
+   31|     26|    int pageStart = stream.ConsumeIntegralInRange<int>(1, 100); // Assuming 1 to 100 pages
+   32|     26|    int pageEnd = stream.ConsumeIntegralInRange<int>(pageStart, 100); // pageEnd should be >= pageStart
+   33|     26|    double x = stream.ConsumeFloatingPoint<double>();
+   34|     26|    double y = stream.ConsumeFloatingPoint<double>();
+   35|     26|    int zoom = stream.ConsumeIntegralInRange<int>(1, 10); // Assuming zoom levels from 1 to 10
+   36|     26|    GBool isPrint = stream.ConsumeBool();
+   37|     26|    GBool isDisplay = stream.ConsumeBool();
+   38|     26|    GBool isAnnotate = stream.ConsumeBool();
+   39|       |    
+   40|       |    // Consume a random length string for DW_TAG_subroutine_typeInfinite
+   41|     26|    std::string subroutineString = stream.ConsumeRandomLengthString(sizeof(DW_TAG_subroutine_typeInfinite));
+   42|     26|    if (subroutineString.size() != sizeof(DW_TAG_subroutine_typeInfinite)) {
+  ------------------
+  |  Branch (42:9): [True: 18, False: 8]
+  ------------------
+   43|     18|        return 0; // Invalid size, do not proceed
+   44|     18|    }
+   45|      8|    DW_TAG_subroutine_typeInfinite *subroutine = reinterpret_cast<DW_TAG_subroutine_typeInfinite*>(const_cast<char*>(subroutineString.data()));
+   46|       |    
+   47|       |    // Consume a user data pointer as a string
+   48|      8|    std::string userDataString = stream.ConsumeRandomLengthString(16); // Assuming userData can be up to 16 bytes
+   49|      8|    void *userData = const_cast<char*>(userDataString.data()); // Convert string to void pointer
+   50|       |
+   51|       |    // Call the function under test
+   52|      8|    PDFDoc pdfDoc;
+   53|      8|	auto start_func = std::chrono::high_resolution_clock::now();
+   54|      8|    pdfDoc.displayPages(&outputDev, pageStart, pageEnd, x, y, zoom, isPrint, isDisplay, isAnnotate, subroutine, userData);
+   55|      8|	auto end_func = std::chrono::high_resolution_clock::now();
+   56|      8|auto end_target = std::chrono::high_resolution_clock::now();
+   57|      8|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   58|       |
+   59|      8|    return 0;
+   60|     26|}
+_ZN6PDFDoc12displayPagesEP9OutputDeviiddibbbPiPv:
+   19|      8|    void displayPages(OutputDev *outputDev, int pageStart, int pageEnd, double x, double y, int zoom, GBool isPrint, GBool isDisplay, GBool isAnnotate, DW_TAG_subroutine_typeInfinite *subroutine, void *userData) {
+   20|       |        // Implementation of the function (not shown here)
+   21|      8|    }
+

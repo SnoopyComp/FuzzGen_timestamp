@@ -1,0 +1,1153 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experiment results</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    line-height: 1.15;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border-right: 1px #dedede solid;
+    border-bottom: 1px #dedede solid;
+    padding: 5px;
+    text-align: left;
+}
+td:first-child, th:first-child {
+    border-left: 1px #dedede solid;
+}
+th {
+    border-top: 1px #dedede solid;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f4f5ff;
+}
+
+.chat_prompt {
+    background-color: #fff7f2;
+    max-width: 50%;
+    overflow: scroll;
+}
+
+.chat_response {
+    background-color: #fcfff2;
+    max-width: 50%;
+    overflow: scroll;
+    margin-left: auto;
+}
+</style>
+<body>
+    LLM: 
+    
+<h1>output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii / 02</h1>
+Bug: False
+<br>
+Crash reason: -
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<h3>Final code</h3>
+
+<pre>
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &lt;string&gt;  // For std::string
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34; // Including a relevant header for Unicode
+#include &#34;/src/xpdf-4.05/goo/gfile.h&#34; // Including the necessary header for GBool
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including the necessary header for memory management
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, int, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+</pre>
+
+
+<h3>Fixer prompt #1</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+
+// Assuming the necessary headers for GfxState, CharCode, Unicode, and GBool are included
+// #include &#34;GfxState.h&#34;
+// #include &#34;CharCode.h&#34;
+// #include &#34;Unicode.h&#34;
+// #include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = reinterpret_cast&lt;GfxState*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState))); // Assuming GfxState is a struct
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    CharCode charCode = stream.ConsumeIntegral&lt;CharCode&gt;();
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    Unicode* unicodePtr = reinterpret_cast&lt;Unicode*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode))); // Assuming Unicode is a struct
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:13:19: error: unknown type name &#39;GfxState&#39;
+   13 |     void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+      |                   ^
+fuzz_zxdoc.cc:13:79: error: unknown type name &#39;CharCode&#39;
+   13 |     void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+      |                                                                               ^
+fuzz_zxdoc.cc:13:94: error: unknown type name &#39;Unicode&#39;
+   13 |     void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+      |                                                                                              ^
+fuzz_zxdoc.cc:13:110: error: unknown type name &#39;GBool&#39;
+   13 |     void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+      |                                                                                                              ^
+fuzz_zxdoc.cc:13:117: error: unknown type name &#39;GBool&#39;
+   13 |     void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+      |                                                                                                                     ^
+fuzz_zxdoc.cc:13:124: error: unknown type name &#39;GBool&#39;
+   13 |     void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+      |                                                                                                                            ^
+fuzz_zxdoc.cc:20:5: error: unknown type name &#39;GfxState&#39;
+   20 |     GfxState* gfxState = reinterpret_cast&lt;GfxState*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState))); // Assuming GfxState is a struct
+      |     ^
+fuzz_zxdoc.cc:20:43: error: unknown type name &#39;GfxState&#39;
+   20 |     GfxState* gfxState = reinterpret_cast&lt;GfxState*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState))); // Assuming GfxState is a struct
+      |                                           ^
+fuzz_zxdoc.cc:20:90: error: use of undeclared identifier &#39;GfxState&#39;; did you mean &#39;gfxState&#39;?
+   20 |     GfxState* gfxState = reinterpret_cast&lt;GfxState*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState))); // Assuming GfxState is a struct
+      |                                                                                          ^~~~~~~~
+      |                                                                                          gfxState
+fuzz_zxdoc.cc:20:15: note: &#39;gfxState&#39; declared here
+   20 |     GfxState* gfxState = reinterpret_cast&lt;GfxState*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState))); // Assuming GfxState is a struct
+      |               ^
+fuzz_zxdoc.cc:27:5: error: unknown type name &#39;CharCode&#39;
+   27 |     CharCode charCode = stream.ConsumeIntegral&lt;CharCode&gt;();
+      |     ^
+fuzz_zxdoc.cc:27:48: error: use of undeclared identifier &#39;CharCode&#39;; did you mean &#39;charCode&#39;?
+   27 |     CharCode charCode = stream.ConsumeIntegral&lt;CharCode&gt;();
+      |                                                ^~~~~~~~
+      |                                                charCode
+fuzz_zxdoc.cc:27:14: note: &#39;charCode&#39; declared here
+   27 |     CharCode charCode = stream.ConsumeIntegral&lt;CharCode&gt;();
+      |              ^
+fuzz_zxdoc.cc:29:5: error: unknown type name &#39;Unicode&#39;
+   29 |     Unicode* unicodePtr = reinterpret_cast&lt;Unicode*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode))); // Assuming Unicode is a struct
+      |     ^
+fuzz_zxdoc.cc:29:44: error: unknown type name &#39;Unicode&#39;
+   29 |     Unicode* unicodePtr = reinterpret_cast&lt;Unicode*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode))); // Assuming Unicode is a struct
+      |                                            ^
+fuzz_zxdoc.cc:29:90: error: use of undeclared identifier &#39;Unicode&#39;
+   29 |     Unicode* unicodePtr = reinterpret_cast&lt;Unicode*&gt;(stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode))); // Assuming Unicode is a struct
+      |                                                                                          ^
+fuzz_zxdoc.cc:31:5: error: unknown type name &#39;GBool&#39;
+   31 |     GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+      |     ^
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: ALWAYS INCLUDE STANDARD LIBRARIES BEFORE PROJECT-SPECIFIC (xpdf) LIBRARIES. This order prevents errors like &#34;unknown type name&#34; for basic types. Additionally, include project-specific libraries that contain declarations before those thatuse these declared symbols.IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #1</h3>
+
+<pre>
+Here&#39;s the fixed code with the necessary includes and adjustments made according to the provided instructions:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;GfxState.h&#34; // Include the necessary project-specific header files
+#include &#34;CharCode.h&#34;
+#include &#34;Unicode.h&#34;
+#include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        memcpy(gfxState, stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState)).data(), sizeof(GfxState));
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    CharCode charCode = stream.ConsumeIntegral&lt;CharCode&gt;();
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        memcpy(unicodePtr, stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode)).data(), sizeof(Unicode));
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Includes Added**: Included the necessary headers for `GfxState`, `CharCode`, `Unicode`, and `GBool`.
+2. **Memory Safety**: Checked the size of the input data before allocating and using `gfxState` and `unicodePtr` to ensure they are not null.
+3. **Memory Management**: Used `new` to allocate memory for `gfxState` and `unicodePtr`, and added cleanup code to avoid memory leaks.
+4. **Properly Using `ConsumeBytes`**: Ensured that `ConsumeBytes` is called only when the size is sufficient to avoid out-of-bounds access.
+</pre>
+
+
+<h3>Fixer prompt #2</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;GfxState.h&#34; // Include the necessary project-specific header files
+#include &#34;CharCode.h&#34;
+#include &#34;Unicode.h&#34;
+#include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        memcpy(gfxState, stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState)).data(), sizeof(GfxState));
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    CharCode charCode = stream.ConsumeIntegral&lt;CharCode&gt;();
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        memcpy(unicodePtr, stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode)).data(), sizeof(Unicode));
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:6:10: fatal error: &#39;CharCode.h&#39; file not found
+    6 | #include &#34;CharCode.h&#34;
+      |          ^~~~~~~~~~~~
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: DO NOT include the header file CharCode.h in the generated fuzz target again, the file does not exist in the project-under-test.
+If the non-existent &lt;filepath&gt;CharCode.h&lt;/filepath&gt; was included for the declaration of &lt;code&gt;void SplashOutputDev::drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool)&lt;/code&gt;, you must replace it with the EXACT path of the actual file &lt;filepath&gt;#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34;&lt;/filepath&gt;. For example:
+&lt;code&gt;
+#include &#34;#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34;&#34;
+&lt;/code&gt;
+Otherwise, consider replacing it with some of the following statementsthat may be correct alternatives:
+&lt;code&gt;
+#include &#34;/src/xpdf-4.05/xpdf/NameToCharCode.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/CharTypes.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/UnicodeMap.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/ShadingImage.h&#34;
+&lt;/code&gt;
+IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #2</h3>
+
+<pre>
+Here is the fixed code that addresses the build issues and follows the provided instructions:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;Unicode.h&#34;
+#include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, int, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. Replaced the non-existent `CharCode.h` include with the correct path to `SplashOutputDev.h`.
+2. Changed the type of `charCode` from `CharCode` to `int` since `CharCode` is not defined.
+3. Added checks to ensure that the size of the data returned by `ConsumeBytes` matches the expected size before proceeding with the `memcpy`.
+4. Ensured that the harness exits early with a return statement if the size validation fails.
+</pre>
+
+
+<h3>Fixer prompt #3</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;Unicode.h&#34;
+#include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, int, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+In file included from fuzz_zxdoc.cc:5:
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: DO NOT include the header file Unicode.h in the generated fuzz target again, the file does not exist in the project-under-test.
+If the non-existent &lt;filepath&gt;Unicode.h&lt;/filepath&gt; was included for the declaration of &lt;code&gt;void SplashOutputDev::drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool)&lt;/code&gt;, you must replace it with the EXACT path of the actual file &lt;filepath&gt;#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34;&lt;/filepath&gt;. For example:
+&lt;code&gt;
+#include &#34;#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34;&#34;
+&lt;/code&gt;
+Otherwise, consider replacing it with some of the following statementsthat may be correct alternatives:
+&lt;code&gt;
+#include &#34;/src/xpdf-4.05/xpdf/UnicodeMap.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/UnicodeRemapping.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/UnicodeMapTables.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/NameToUnicodeTable.h&#34;
+&lt;/code&gt;
+IMPORTANT: ALWAYS INCLUDE STANDARD LIBRARIES BEFORE PROJECT-SPECIFIC (xpdf) LIBRARIES. This order prevents errors like &#34;unknown type name&#34; for basic types. Additionally, include project-specific libraries that contain declarations before those thatuse these declared symbols.IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #3</h3>
+
+<pre>
+Here is the fixed code based on the provided instructions and issues:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34; // Including a relevant header for Unicode
+#include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. Included the relevant header file `CharCodeToUnicode.h` to provide the definition for `CharCode`.
+2. Ensured that standard libraries are included before project-specific libraries.
+3. Validated the size of the byte vectors returned by `ConsumeBytes` to ensure they match the expected sizes before proceeding with memory operations. 
+4. Retained the structure of the original code while applying necessary fixes to ensure it builds correctly for fuzzing.
+</pre>
+
+
+<h3>Fixer prompt #4</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34; // Including a relevant header for Unicode
+#include &#34;GBool.h&#34;
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+In file included from fuzz_zxdoc.cc:5:
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: DO NOT include the header file GBool.h in the generated fuzz target again, the file does not exist in the project-under-test.
+If the non-existent &lt;filepath&gt;GBool.h&lt;/filepath&gt; was included for the declaration of &lt;code&gt;void SplashOutputDev::drawChar(GfxState *, double, double, double, double, double, double, CharCode, int, Unicode *, int, GBool, GBool, GBool)&lt;/code&gt;, you must replace it with the EXACT path of the actual file &lt;filepath&gt;#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34;&lt;/filepath&gt;. For example:
+&lt;code&gt;
+#include &#34;#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34;&#34;
+&lt;/code&gt;
+Otherwise, consider replacing it with some of the following statementsthat may be correct alternatives:
+&lt;code&gt;
+#include &#34;/src/xpdf-4.05/goo/gfile.h&#34;
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/GlobalParams.h&#34;
+#include &#34;/src/xpdf-4.05/xpdf/Zoox.h&#34;
+#include &#34;/src/xpdf-4.05/goo/Trace.h&#34;
+&lt;/code&gt;
+IMPORTANT: ALWAYS INCLUDE STANDARD LIBRARIES BEFORE PROJECT-SPECIFIC (xpdf) LIBRARIES. This order prevents errors like &#34;unknown type name&#34; for basic types. Additionally, include project-specific libraries that contain declarations before those thatuse these declared symbols.IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #4</h3>
+
+<pre>
+Here is the corrected code that addresses the build issues and follows the provided instructions:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34; // Including a relevant header for Unicode
+#include &#34;/src/xpdf-4.05/goo/gfile.h&#34; // Including the necessary header for GBool
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including the necessary header for memory management
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, int, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. Included necessary headers for `GBool` and other types.
+2. Ensured that the order of includes follows the guideline of including standard libraries before project-specific libraries.
+3. Validated the size of the vector returned by `ConsumeBytes` before proceeding with the memcpy operation.
+4. Adjusted the `drawChar` method signature to replace `CharCode` with `int`, as `CharCode` was not defined. 
+
+This code should now compile successfully for fuzzing purposes.
+</pre>
+
+
+<h3>Fixer prompt #5</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34; // Including a relevant header for Unicode
+#include &#34;/src/xpdf-4.05/goo/gfile.h&#34; // Including the necessary header for GBool
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including the necessary header for memory management
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, int, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+In file included from fuzz_zxdoc.cc:5:
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: ALWAYS INCLUDE STANDARD LIBRARIES BEFORE PROJECT-SPECIFIC (xpdf) LIBRARIES. This order prevents errors like &#34;unknown type name&#34; for basic types. Additionally, include project-specific libraries that contain declarations before those thatuse these declared symbols.IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #5</h3>
+
+<pre>
+Here is the corrected C++ fuzz harness code, addressing the build issues and following the provided instructions:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;vector&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstring&gt; // For memcpy
+#include &lt;string&gt;  // For std::string
+#include &#34;/src/xpdf-4.05/xpdf/SplashOutputDev.h&#34; // Include the correct header file
+#include &#34;/src/xpdf-4.05/xpdf/CharCodeToUnicode.h&#34; // Including a relevant header for Unicode
+#include &#34;/src/xpdf-4.05/goo/gfile.h&#34; // Including the necessary header for GBool
+#include &#34;/src/xpdf-4.05/goo/gmem.h&#34; // Including the necessary header for memory management
+
+class SplashOutputDev {
+public:
+    void drawChar(GfxState *, double, double, double, double, double, double, int, int, Unicode *, int, GBool, GBool, GBool);
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Initialize parameters for drawChar
+    GfxState* gfxState = nullptr;
+    if (size &gt;= sizeof(GfxState)) {
+        gfxState = new GfxState();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(GfxState));
+        if (bytes.size() == sizeof(GfxState)) {
+            memcpy(gfxState, bytes.data(), sizeof(GfxState));
+        } else {
+            delete gfxState;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    double param1 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param2 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param3 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param4 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param5 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    double param6 = stream.ConsumeFloatingPoint&lt;double&gt;();
+    int charCode = stream.ConsumeIntegral&lt;int&gt;(); // Changed to int, since CharCode is not defined
+    int intParam = stream.ConsumeIntegral&lt;int&gt;();
+    
+    Unicode* unicodePtr = nullptr;
+    if (size &gt;= sizeof(Unicode)) {
+        unicodePtr = new Unicode();
+        auto bytes = stream.ConsumeBytes&lt;uint8_t&gt;(sizeof(Unicode));
+        if (bytes.size() == sizeof(Unicode)) {
+            memcpy(unicodePtr, bytes.data(), sizeof(Unicode));
+        } else {
+            delete unicodePtr;
+            return 0; // Invalid size, exit early
+        }
+    }
+
+    int intParam2 = stream.ConsumeIntegral&lt;int&gt;();
+    GBool boolParam1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type
+    GBool boolParam2 = stream.ConsumeBool() ? 1 : 0;
+    GBool boolParam3 = stream.ConsumeBool() ? 1 : 0;
+
+    // Call the function under test
+    SplashOutputDev splashOutputDev;
+    if (gfxState &amp;&amp; unicodePtr) { // Ensure pointers are not null before calling
+        splashOutputDev.drawChar(gfxState, param1, param2, param3, param4, param5, param6, charCode, intParam, unicodePtr, intParam2, boolParam1, boolParam2, boolParam3);
+    }
+
+    // Clean up
+    delete gfxState;
+    delete unicodePtr;
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Include Order**: Standard libraries are included before project-specific libraries to prevent &#34;unknown type name&#34; errors.
+2. **Memory Management**: The code checks the size of the data returned by `ConsumeBytes` to ensure it matches the expected size before proceeding.
+3. **Use of `ConsumeBytes`**: The use of `ConsumeBytes` is retained as it is appropriate for the context, but the validation of size is emphasized to ensure safety. 
+
+This code should now compile successfully for fuzzing and maximize the potential for testing the `drawChar` function with valid inputs.
+</pre>
+
+
+<h2>Logs</h2>
+
+<pre >
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example7/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 1.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example7/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 2.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example7/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 3.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example7/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 4.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example7/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini, attempt 5.
+Failed to build /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/no_example7/output-xpdf-_zn15splashoutputdev8drawcharep8gfxstateddddddjipjiiii/fixed_targets/02.cc with gpt-4o-mini in 5 iterations of fixing.
+
+</pre>
+
+
+<h2>Run logs</h2>
+<pre>
+
+</pre>
+
+
+</body>

@@ -1,0 +1,59 @@
+LLVMFuzzerTestOneInput:
+   27|     51|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   28|     51|auto start_target = std::chrono::high_resolution_clock::now();
+   29|     51|    FuzzedDataProvider fuzzed_data(data, size);
+   30|       |
+   31|       |    // Initialize GfxState
+   32|     51|    GfxState gfxState;
+   33|       |
+   34|       |    // Consume floating point values for the double parameters
+   35|     51|    double x = fuzzed_data.ConsumeFloatingPoint<double>();
+   36|     51|    double y = fuzzed_data.ConsumeFloatingPoint<double>();
+   37|     51|    double width = fuzzed_data.ConsumeFloatingPoint<double>();
+   38|     51|    double height = fuzzed_data.ConsumeFloatingPoint<double>();
+   39|     51|    double dx = fuzzed_data.ConsumeFloatingPoint<double>();
+   40|     51|    double dy = fuzzed_data.ConsumeFloatingPoint<double>();
+   41|       |
+   42|       |    // Consume a CharCode (using int for simplicity)
+   43|     51|    CharCode charCode = fuzzed_data.ConsumeIntegral<CharCode>();
+   44|       |
+   45|       |    // Consume an integer for font size
+   46|     51|    int fontSize = fuzzed_data.ConsumeIntegral<int>();
+   47|       |
+   48|       |    // Consume Unicode array
+   49|     51|    size_t unicodeCount = fuzzed_data.ConsumeIntegralInRange<size_t>(1, 100); // Assuming a max size
+   50|     51|    std::string unicodeString = fuzzed_data.ConsumeRandomLengthString(unicodeCount * sizeof(Unicode));
+   51|     51|    std::vector<Unicode> unicodeArray(unicodeCount);
+   52|       |    
+   53|       |    // Ensure the size of the string matches the expected size
+   54|     51|    if (unicodeString.size() != unicodeCount * sizeof(Unicode)) {
+  ------------------
+  |  Branch (54:9): [True: 48, False: 3]
+  ------------------
+   55|     48|        return 0; // Invalid size, exit early
+   56|     48|    }
+   57|       |
+   58|       |    // Copy data from the string to the unicodeArray
+   59|      3|    std::memcpy(unicodeArray.data(), unicodeString.data(), unicodeCount * sizeof(Unicode));
+   60|      3|    Unicode *unicodePtr = unicodeArray.data();
+   61|       |
+   62|       |    // Consume GBool flags
+   63|      3|    GBool flag1 = fuzzed_data.ConsumeBool();
+   64|      3|    GBool flag2 = fuzzed_data.ConsumeBool();
+   65|      3|    GBool flag3 = fuzzed_data.ConsumeBool();
+   66|       |
+   67|       |    // Call the function under test
+   68|      3|    SplashOutputDev splashOutputDev;
+   69|      3|	auto start_func = std::chrono::high_resolution_clock::now();
+   70|      3|    splashOutputDev.drawChar(&gfxState, x, y, width, height, dx, dy, charCode, fontSize, unicodePtr, unicodeCount, flag1, flag2, flag3);
+   71|      3|	auto end_func = std::chrono::high_resolution_clock::now();
+   72|      3|auto end_target = std::chrono::high_resolution_clock::now();
+   73|      3|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   74|       |
+   75|      3|    return 0;
+   76|     51|}
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddiiPiibbb:
+   21|      3|                  Unicode *unicode, int unicodeCount, GBool flag1, GBool flag2, GBool flag3) {
+   22|       |        // Function implementation
+   23|      3|    }
+

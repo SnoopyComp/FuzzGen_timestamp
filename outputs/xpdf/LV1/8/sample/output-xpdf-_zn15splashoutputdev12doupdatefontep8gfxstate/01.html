@@ -1,0 +1,950 @@
+<!doctype html>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Experiment results</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    line-height: 1.15;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+td, th {
+    border-right: 1px #dedede solid;
+    border-bottom: 1px #dedede solid;
+    padding: 5px;
+    text-align: left;
+}
+td:first-child, th:first-child {
+    border-left: 1px #dedede solid;
+}
+th {
+    border-top: 1px #dedede solid;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f4f5ff;
+}
+
+.chat_prompt {
+    background-color: #fff7f2;
+    max-width: 50%;
+    overflow: scroll;
+}
+
+.chat_response {
+    background-color: #fcfff2;
+    max-width: 50%;
+    overflow: scroll;
+    margin-left: auto;
+}
+</style>
+<body>
+    LLM: 
+    
+<h1>output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate / 01</h1>
+Bug: False
+<br>
+Crash reason: NO_SEMANTIC_ERR
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+<h3>Final code</h3>
+
+<pre>
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;chrono&gt;//erase
+#ifndef iostream//erase
+#include &lt;iostream&gt;//erase
+#endif//erase
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    } // Added missing semicolon here
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+auto start_target = std::chrono::high_resolution_clock::now();//erase
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    std::string random_data = stream.ConsumeRandomLengthString(data_length);
+
+    // Validate the size of the consumed data
+    if (random_data.size() != data_length) {
+        return 0; // Size mismatch, do not proceed
+    }
+    
+    // Convert the string to a vector of uint8_t
+    gfxState.some_data.assign(random_data.begin(), random_data.end());
+
+    // Call the function under test
+	auto start_func = std::chrono::high_resolution_clock::now();//erase
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+	auto end_func = std::chrono::high_resolution_clock::now();//erase
+auto end_target = std::chrono::high_resolution_clock::now();//erase
+std::cout&lt;&lt;&#34;Target runtime : &#34;&lt;&lt;std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(end_target-start_target).count()&lt;&lt;&#34;, Function runtime : &#34;&lt;&lt;std::chrono::duration_cast&lt;std::chrono::nanoseconds&gt;(end_func - start_func).count()&lt;&lt;std::endl;//erase
+
+    return 0;
+}
+</pre>
+
+
+<h3>Fixer prompt #1</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    }
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    gfxState.some_data = stream.ConsumeBytes&lt;uint8_t&gt;(data_length);
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+(.text.main+0x12): undefined reference to `LLVMFuzzerTestOneInput&#39;
+&lt;/error&gt;
+
+
+Below are instructions to assist you in fixing the error.
+&lt;instruction&gt;
+IMPORTANT: the harness source code contains a call to `ConsumeBytes`. Whenever this function is used, you MUST validate the size of the vector returned, and make sure that the size of the vector is equal to argument given to `ConsumeBytes`. If it is not equal, the harness should not proceed.
+Furthermore, consider changing ConsumeBytes to `ConsumeRandomLengthString` for creating `char` buffers or strings. In most cases, `ConsumeRandomLengthString` is preferred, and should be used instead of ConsumeBytes
+
+&lt;/instruction&gt;
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #1</h3>
+
+<pre>
+Here is the complete code with the necessary fixes applied to address the build issue and to ensure proper validation of the size of the vector returned from `ConsumeBytes`. Additionally, I have replaced `ConsumeBytes` with `ConsumeRandomLengthString` as per the instructions:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    }
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    std::string random_data = stream.ConsumeRandomLengthString(data_length);
+
+    // Validate the size of the consumed data
+    if (random_data.size() != data_length) {
+        return 0; // Size mismatch, do not proceed
+    }
+    
+    // Convert the string to a vector of uint8_t
+    gfxState.some_data.assign(random_data.begin(), random_data.end());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. **Replaced `ConsumeBytes` with `ConsumeRandomLengthString`:** This change is made to better handle the data being consumed.
+2. **Validation of size:** After consuming the random length string, the size of the string is checked against the expected length. If they do not match, the function exits early to prevent further processing.
+3. **Conversion of string to vector:** The consumed string is converted to a `std::vector&lt;uint8_t&gt;` for `gfxState.some_data`.
+
+This code should now compile and run correctly for fuzzing, while adhering to the provided instructions.
+</pre>
+
+
+<h3>Fixer prompt #2</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    }
+};
+
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    std::string random_data = stream.ConsumeRandomLengthString(data_length);
+
+    // Validate the size of the consumed data
+    if (random_data.size() != data_length) {
+        return 0; // Size mismatch, do not proceed
+    }
+    
+    // Convert the string to a vector of uint8_t
+    gfxState.some_data.assign(random_data.begin(), random_data.end());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+(.text.main+0x12): undefined reference to `LLVMFuzzerTestOneInput&#39;
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #2</h3>
+
+<pre>
+To resolve the build issue regarding the undefined reference to `LLVMFuzzerTestOneInput`, we need to ensure that the function is properly defined and linked for the fuzzing framework. The code provided seems to be correctly structured for fuzzing, but the error indicates that the function might not be recognized during the linking stage.
+
+Here’s the complete code with no changes to the logic, but ensuring we include the necessary headers and linking directives for the fuzzing framework:
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    std::string random_data = stream.ConsumeRandomLengthString(data_length);
+
+    // Validate the size of the consumed data
+    if (random_data.size() != data_length) {
+        return 0; // Size mismatch, do not proceed
+    }
+    
+    // Convert the string to a vector of uint8_t
+    gfxState.some_data.assign(random_data.begin(), random_data.end());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+```
+
+### Changes Made:
+1. Added `extern &#34;C&#34;` before the `LLVMFuzzerTestOneInput` function definition to ensure that the C++ compiler does not mangle the function name, making it recognizable by the fuzzing framework.
+2. Ensured that all necessary includes and definitions are retained.
+
+### Note:
+Make sure you compile the code with the appropriate flags for the fuzzing framework, typically something like:
+```bash
+clang++ -fsanitize=fuzzer,address -o fuzz_target your_code.cpp
+```
+This command will ensure that the fuzzer is linked correctly and can find the `LLVMFuzzerTestOneInput` function.
+</pre>
+
+
+<h3>Fixer prompt #3</h3>
+<pre>
+
+Given the following C++ fuzz harness and its build error message, fix the code to make it build for fuzzing.
+
+If there is undeclared identifier or unknown type name error, fix it by finding and including the related libraries.
+
+MUST RETURN THE FULL CODE, INCLUDING UNCHANGED PARTS.
+
+Below is the code needs to be built:
+&lt;code&gt;
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    }
+}
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    std::string random_data = stream.ConsumeRandomLengthString(data_length);
+
+    // Validate the size of the consumed data
+    if (random_data.size() != data_length) {
+        return 0; // Size mismatch, do not proceed
+    }
+    
+    // Convert the string to a vector of uint8_t
+    gfxState.some_data.assign(random_data.begin(), random_data.end());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+&lt;/code&gt;
+
+Below is the error to fix:
+The code has the following build issues:
+&lt;error&gt;
+fuzz_zxdoc.cc:25:8: error: expected unqualified-id
+   25 | extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+      |        ^
+&lt;/error&gt;
+
+
+
+
+Fix code:
+1. Consider possible solutions for the issues listed above.
+2. Choose a solution that can maximize fuzzing result, which is utilizing the function under test and feeding it not null input.
+3. Apply the solutions to the original code.
+It&#39;s important to show the complete code, not only the fixed line.
+&lt;solution&gt;
+</pre>
+
+
+
+<h3>Code #3</h3>
+
+<pre>
+Here is the corrected C++ fuzz harness code. The main issue was that the `SplashOutputDev` class was missing a semicolon at the end of its definition. This has been fixed, and the code should now compile correctly for fuzzing.
+
+```cpp
+#include &lt;fuzzer/FuzzedDataProvider.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+// Assume GfxState is defined somewhere in the codebase.
+class GfxState {
+public:
+    // Example members for GfxState, actual implementation may vary.
+    int some_integer;
+    float some_float;
+    std::vector&lt;uint8_t&gt; some_data;
+
+    GfxState() : some_integer(0), some_float(0.0f) {}
+};
+
+// Assume SplashOutputDev is defined somewhere in the codebase.
+class SplashOutputDev {
+public:
+    void doUpdateFont(GfxState *gfxState) {
+        // Implementation of the method
+    } // Added missing semicolon here
+};
+
+extern &#34;C&#34; int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    FuzzedDataProvider stream(data, size);
+
+    // Create an instance of SplashOutputDev
+    SplashOutputDev splashOutputDev;
+
+    // Initialize GfxState
+    GfxState gfxState;
+
+    // Consume data to fill GfxState members
+    gfxState.some_integer = stream.ConsumeIntegral&lt;int&gt;();
+    gfxState.some_float = stream.ConsumeFloatingPoint&lt;float&gt;();
+
+    // Consume a random length for some_data
+    size_t data_length = stream.ConsumeIntegralInRange&lt;size_t&gt;(1, 1024); // Avoid 0 length
+    std::string random_data = stream.ConsumeRandomLengthString(data_length);
+
+    // Validate the size of the consumed data
+    if (random_data.size() != data_length) {
+        return 0; // Size mismatch, do not proceed
+    }
+    
+    // Convert the string to a vector of uint8_t
+    gfxState.some_data.assign(random_data.begin(), random_data.end());
+
+    // Call the function under test
+    splashOutputDev.doUpdateFont(&amp;gfxState);
+
+    return 0;
+}
+```
+
+This code should now compile without errors and is ready for fuzz testing.
+</pre>
+
+
+<h2>Logs</h2>
+
+<pre >
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1/8/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/01.cc with gpt-4o-mini, attempt 1.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1/8/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/01.cc with gpt-4o-mini, attempt 2.
+Fixing /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1/8/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/01.cc with gpt-4o-mini, attempt 3.
+Successfully built /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1/8/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/01.cc with gpt-4o-mini in 4 iterations of fixing.
+Triaging the crash related to /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1/8/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/fixed_targets/01.cc with gpt-4o-mini.
+Warning: no crash info in xpdf-zn15splashoutputdev12doupdatefontep8gfxstate-01.
+Result for xpdf-zn15splashoutputdev12doupdatefontep8gfxstate-01: crashes=False, coverage=0.52046783625731 (89/171), coverage diff=0.0 (0/124776)
+
+</pre>
+
+
+<h2>Run logs</h2>
+<pre>
+INFO:__main__:Running: docker run --privileged --shm-size=2g --platform linux/amd64 --rm -e FUZZING_ENGINE=libfuzzer -e SANITIZER=address -e RUN_FUZZER_MODE=interactive -e HELPER=True -v /home/hyunchang/Desktop/oss-fuzz-gen/results/xpdf/LV1/8/output-xpdf-_zn15splashoutputdev12doupdatefontep8gfxstate/corpora/01.cc:/tmp/fuzz_zxdoc_corpus -v /tmp/tmpjmsieqlq/build/out/xpdf-zn15splashoutputdev12doupdatefontep8gfxstate-01:/out -t gcr.io/oss-fuzz-base/base-runner run_fuzzer fuzz_zxdoc -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30.
+vm.mmap_rnd_bits = 28
+rm: cannot remove &#39;/tmp/fuzz_zxdoc_corpus&#39;: Device or resource busy
+/out/fuzz_zxdoc -rss_limit_mb=2560 -timeout=25 -print_final_stats=1 -max_total_time=30 -len_control=0 -timeout=30 /tmp/fuzz_zxdoc_corpus &lt; /dev/null
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 4039824246
+INFO: Loaded 1 modules   (171 inline 8-bit counters): 171 [0x557c00b08200, 0x557c00b082ab), 
+INFO: Loaded 1 PC tables (171 PCs): 171 [0x557c00b082b0,0x557c00b08d60), 
+INFO:        0 files found in /tmp/fuzz_zxdoc_corpus
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+INFO: A corpus is not provided, starting from an empty corpus
+#2	INITED cov: 19 ft: 20 corp: 1/1b exec/s: 0 rss: 31Mb
+#4	NEW    cov: 19 ft: 22 corp: 2/3b lim: 4096 exec/s: 0 rss: 31Mb L: 2/2 MS: 2 ShuffleBytes-CrossOver-
+Target runtime : 7464, Function runtime : 40
+	NEW_FUNC[1/5]: 0x557c00a0d820 in void std::__1::vector&lt;unsigned char, std::__1::allocator&lt;unsigned char&gt;&gt;::__assign_with_size[abi:ne180100]&lt;std::__1::__wrap_iter&lt;char*&gt;, std::__1::__wrap_iter&lt;char*&gt;&gt;(std::__1::__wrap_iter&lt;char*&gt;, std::__1::__wrap_iter&lt;char*&gt;, long) /usr/local/bin/../include/c++/v1/vector:1332
+	NEW_FUNC[2/5]: 0x557c00a0dbb0 in void std::__1::vector&lt;unsigned char, std::__1::allocator&lt;unsigned char&gt;&gt;::__construct_at_end&lt;std::__1::__wrap_iter&lt;char*&gt;, std::__1::__wrap_iter&lt;char*&gt;&gt;(std::__1::__wrap_iter&lt;char*&gt;, std::__1::__wrap_iter&lt;char*&gt;, unsigned long) /usr/local/bin/../include/c++/v1/vector:1080
+Target runtime : 7304, Function runtime : 30
+#6	NEW    cov: 62 ft: 70 corp: 3/46b lim: 4096 exec/s: 0 rss: 32Mb L: 43/43 MS: 1 InsertRepeatedBytes-
+#12	NEW    cov: 68 ft: 80 corp: 4/134b lim: 4096 exec/s: 0 rss: 32Mb L: 88/88 MS: 1 InsertRepeatedBytes-
+#24	NEW    cov: 68 ft: 84 corp: 5/284b lim: 4096 exec/s: 0 rss: 32Mb L: 150/150 MS: 2 ShuffleBytes-CopyPart-
+Target runtime : 1694, Function runtime : 20
+#25	NEW    cov: 68 ft: 85 corp: 6/328b lim: 4096 exec/s: 0 rss: 32Mb L: 44/150 MS: 1 InsertByte-
+Target runtime : 1162, Function runtime : 31
+Target runtime : 561, Function runtime : 30
+Target runtime : 431, Function runtime : 31
+Target runtime : 581, Function runtime : 20
+Target runtime : 521, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 6071, Function runtime : 20
+Target runtime : 651, Function runtime : 30
+Target runtime : 621, Function runtime : 31
+Target runtime : 501, Function runtime : 30
+Target runtime : 493, Function runtime : 21
+Target runtime : 531, Function runtime : 30
+Target runtime : 480, Function runtime : 30
+Target runtime : 541, Function runtime : 20
+Target runtime : 1152, Function runtime : 20
+Target runtime : 611, Function runtime : 20
+Target runtime : 561, Function runtime : 30
+Target runtime : 490, Function runtime : 29
+Target runtime : 562, Function runtime : 20
+Target runtime : 561, Function runtime : 29
+Target runtime : 471, Function runtime : 30
+Target runtime : 451, Function runtime : 30
+Target runtime : 451, Function runtime : 30
+Target runtime : 460, Function runtime : 20
+Target runtime : 480, Function runtime : 30
+#62	REDUCE cov: 68 ft: 85 corp: 6/306b lim: 4096 exec/s: 0 rss: 32Mb L: 22/150 MS: 2 ChangeBit-EraseBytes-
+Target runtime : 3617, Function runtime : 30
+#71	NEW    cov: 72 ft: 89 corp: 7/419b lim: 4096 exec/s: 0 rss: 32Mb L: 113/150 MS: 4 CopyPart-InsertRepeatedBytes-ShuffleBytes-InsertRepeatedBytes-
+#78	REDUCE cov: 72 ft: 89 corp: 7/411b lim: 4096 exec/s: 0 rss: 32Mb L: 80/150 MS: 2 CMP-EraseBytes- DE: &#34;\377\377&#34;-
+Target runtime : 822, Function runtime : 30
+Target runtime : 531, Function runtime : 30
+Target runtime : 521, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 521, Function runtime : 20
+Target runtime : 661, Function runtime : 20
+#100	REDUCE cov: 72 ft: 89 corp: 7/408b lim: 4096 exec/s: 0 rss: 32Mb L: 19/150 MS: 2 PersAutoDict-EraseBytes- DE: &#34;\377\377&#34;-
+Target runtime : 3046, Function runtime : 20
+Target runtime : 2224, Function runtime : 30
+Target runtime : 2805, Function runtime : 30
+Target runtime : 2124, Function runtime : 30
+Target runtime : 2144, Function runtime : 20
+Target runtime : 551, Function runtime : 30
+Target runtime : 491, Function runtime : 20
+Target runtime : 511, Function runtime : 30
+Target runtime : 441, Function runtime : 20
+Target runtime : 4709, Function runtime : 20
+Target runtime : 2134, Function runtime : 21
+Target runtime : 2084, Function runtime : 20
+Target runtime : 491, Function runtime : 21
+Target runtime : 591, Function runtime : 20
+#133	NEW    cov: 72 ft: 90 corp: 8/418b lim: 4096 exec/s: 0 rss: 32Mb L: 10/150 MS: 3 ShuffleBytes-CMP-InsertByte- DE: &#34;\001\000\000\000\000\000\000M&#34;-
+Target runtime : 652, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 470, Function runtime : 30
+#146	REDUCE cov: 72 ft: 90 corp: 8/415b lim: 4096 exec/s: 0 rss: 32Mb L: 16/150 MS: 3 CMP-CrossOver-EraseBytes- DE: &#34;\377\377&#34;-
+Target runtime : 2394, Function runtime : 30
+Target runtime : 2174, Function runtime : 30
+Target runtime : 2094, Function runtime : 20
+Target runtime : 2074, Function runtime : 31
+Target runtime : 2074, Function runtime : 31
+#158	NEW    cov: 72 ft: 91 corp: 9/418b lim: 4096 exec/s: 0 rss: 32Mb L: 3/150 MS: 2 ShuffleBytes-PersAutoDict- DE: &#34;\377\377&#34;-
+Target runtime : 762, Function runtime : 20
+Target runtime : 491, Function runtime : 20
+Target runtime : 471, Function runtime : 20
+Target runtime : 480, Function runtime : 20
+Target runtime : 451, Function runtime : 30
+Target runtime : 2294, Function runtime : 30
+Target runtime : 801, Function runtime : 30
+#184	NEW    cov: 72 ft: 96 corp: 10/461b lim: 4096 exec/s: 0 rss: 32Mb L: 43/150 MS: 1 CrossOver-
+Target runtime : 701, Function runtime : 20
+Target runtime : 521, Function runtime : 30
+Target runtime : 461, Function runtime : 20
+Target runtime : 501, Function runtime : 30
+Target runtime : 732, Function runtime : 30
+Target runtime : 451, Function runtime : 20
+Target runtime : 470, Function runtime : 30
+Target runtime : 491, Function runtime : 20
+Target runtime : 490, Function runtime : 29
+Target runtime : 461, Function runtime : 20
+Target runtime : 481, Function runtime : 20
+Target runtime : 461, Function runtime : 20
+Target runtime : 450, Function runtime : 29
+Target runtime : 2184, Function runtime : 20
+Target runtime : 2114, Function runtime : 30
+Target runtime : 2094, Function runtime : 29
+Target runtime : 481, Function runtime : 30
+Target runtime : 461, Function runtime : 31
+Target runtime : 821, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 472, Function runtime : 20
+Target runtime : 461, Function runtime : 20
+Target runtime : 461, Function runtime : 30
+Target runtime : 2104, Function runtime : 20
+Target runtime : 481, Function runtime : 31
+Target runtime : 742, Function runtime : 20
+#240	REDUCE cov: 72 ft: 96 corp: 10/446b lim: 4096 exec/s: 0 rss: 32Mb L: 28/150 MS: 1 EraseBytes-
+Target runtime : 3066, Function runtime : 30
+Target runtime : 631, Function runtime : 20
+Target runtime : 530, Function runtime : 30
+Target runtime : 492, Function runtime : 20
+Target runtime : 491, Function runtime : 31
+Target runtime : 851, Function runtime : 30
+Target runtime : 6382, Function runtime : 30
+Target runtime : 2244, Function runtime : 20
+Target runtime : 2365, Function runtime : 30
+Target runtime : 2084, Function runtime : 20
+Target runtime : 571, Function runtime : 30
+Target runtime : 450, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 461, Function runtime : 20
+Tar
+...truncated...
+runtime : 1613, Function runtime : 30
+Target runtime : 471, Function runtime : 20
+Target runtime : 461, Function runtime : 30
+Target runtime : 460, Function runtime : 29
+Target runtime : 451, Function runtime : 20
+Target runtime : 451, Function runtime : 20
+Target runtime : 1402, Function runtime : 30
+Target runtime : 4068, Function runtime : 20
+Target runtime : 791, Function runtime : 30
+Target runtime : 641, Function runtime : 20
+Target runtime : 1212, Function runtime : 20
+Target runtime : 532, Function runtime : 20
+Target runtime : 491, Function runtime : 20
+Target runtime : 451, Function runtime : 30
+Target runtime : 451, Function runtime : 20
+Target runtime : 732, Function runtime : 20
+Target runtime : 440, Function runtime : 29
+Target runtime : 2235, Function runtime : 20
+Target runtime : 2134, Function runtime : 20
+Target runtime : 832, Function runtime : 20
+Target runtime : 480, Function runtime : 29
+Target runtime : 561, Function runtime : 30
+Target runtime : 631, Function runtime : 30
+Target runtime : 481, Function runtime : 20
+Target runtime : 1162, Function runtime : 29
+Target runtime : 511, Function runtime : 30
+Target runtime : 431, Function runtime : 20
+Target runtime : 431, Function runtime : 20
+Target runtime : 431, Function runtime : 20
+Target runtime : 1153, Function runtime : 20
+Target runtime : 491, Function runtime : 30
+Target runtime : 441, Function runtime : 20
+Target runtime : 531, Function runtime : 30
+Target runtime : 1162, Function runtime : 30
+Target runtime : 471, Function runtime : 20
+Target runtime : 461, Function runtime : 30
+Target runtime : 421, Function runtime : 30
+Target runtime : 431, Function runtime : 20
+Target runtime : 420, Function runtime : 29
+Target runtime : 420, Function runtime : 20
+Target runtime : 1503, Function runtime : 30
+Target runtime : 2244, Function runtime : 30
+Target runtime : 1432, Function runtime : 20
+Target runtime : 2024, Function runtime : 30
+Target runtime : 521, Function runtime : 20
+Target runtime : 441, Function runtime : 20
+Target runtime : 631, Function runtime : 30
+Target runtime : 801, Function runtime : 20
+Target runtime : 451, Function runtime : 30
+Target runtime : 432, Function runtime : 30
+Target runtime : 581, Function runtime : 20
+Target runtime : 461, Function runtime : 20
+Target runtime : 512, Function runtime : 30
+Target runtime : 1172, Function runtime : 30
+Target runtime : 501, Function runtime : 20
+Target runtime : 461, Function runtime : 20
+Target runtime : 441, Function runtime : 30
+Target runtime : 5190, Function runtime : 20
+Target runtime : 861, Function runtime : 20
+Target runtime : 461, Function runtime : 30
+Target runtime : 440, Function runtime : 29
+Target runtime : 431, Function runtime : 20
+Target runtime : 441, Function runtime : 30
+Target runtime : 772, Function runtime : 31
+Target runtime : 461, Function runtime : 30
+Target runtime : 431, Function runtime : 30
+Target runtime : 432, Function runtime : 20
+Target runtime : 441, Function runtime : 20
+Target runtime : 812, Function runtime : 30
+Target runtime : 1352, Function runtime : 20
+Target runtime : 641, Function runtime : 30
+Target runtime : 611, Function runtime : 20
+Target runtime : 611, Function runtime : 30
+Target runtime : 491, Function runtime : 30
+Target runtime : 491, Function runtime : 30
+Target runtime : 472, Function runtime : 20
+Target runtime : 801, Function runtime : 30
+Target runtime : 530, Function runtime : 20
+Target runtime : 501, Function runtime : 20
+Target runtime : 481, Function runtime : 20
+Target runtime : 561, Function runtime : 30
+Target runtime : 450, Function runtime : 29
+Target runtime : 1142, Function runtime : 29
+Target runtime : 461, Function runtime : 20
+Target runtime : 531, Function runtime : 30
+Target runtime : 431, Function runtime : 31
+Target runtime : 551, Function runtime : 29
+Target runtime : 721, Function runtime : 30
+Target runtime : 481, Function runtime : 20
+Target runtime : 460, Function runtime : 31
+Target runtime : 461, Function runtime : 20
+Target runtime : 441, Function runtime : 20
+Target runtime : 430, Function runtime : 20
+Target runtime : 712, Function runtime : 31
+Target runtime : 1112, Function runtime : 30
+Target runtime : 461, Function runtime : 30
+Target runtime : 441, Function runtime : 31
+Target runtime : 701, Function runtime : 20
+Target runtime : 1382, Function runtime : 20
+Target runtime : 691, Function runtime : 20
+Target runtime : 611, Function runtime : 29
+Target runtime : 612, Function runtime : 31
+Target runtime : 501, Function runtime : 20
+Target runtime : 471, Function runtime : 30
+Target runtime : 512, Function runtime : 20
+Target runtime : 642, Function runtime : 30
+Target runtime : 450, Function runtime : 30
+Target runtime : 421, Function runtime : 30
+Target runtime : 1292, Function runtime : 20
+Target runtime : 591, Function runtime : 30
+Target runtime : 440, Function runtime : 29
+Target runtime : 481, Function runtime : 30
+Target runtime : 420, Function runtime : 29
+Target runtime : 1142, Function runtime : 30
+Target runtime : 471, Function runtime : 30
+Target runtime : 441, Function runtime : 20
+Target runtime : 431, Function runtime : 20
+Target runtime : 431, Function runtime : 20
+Target runtime : 721, Function runtime : 30
+Target runtime : 431, Function runtime : 30
+Target runtime : 461, Function runtime : 20
+Target runtime : 1152, Function runtime : 20
+Target runtime : 571, Function runtime : 20
+Target runtime : 1222, Function runtime : 30
+Target runtime : 581, Function runtime : 20
+Target runtime : 521, Function runtime : 20
+Target runtime : 441, Function runtime : 30
+Target runtime : 491, Function runtime : 20
+Target runtime : 451, Function runtime : 30
+Target runtime : 421, Function runtime : 31
+Target runtime : 421, Function runtime : 30
+Target runtime : 431, Function runtime : 31
+Target runtime : 441, Function runtime : 21
+Target runtime : 1232, Function runtime : 20
+Target runtime : 461, Function runtime : 30
+Target runtime : 481, Function runtime : 30
+Target runtime : 441, Function runtime : 30
+Target runtime : 470, Function runtime : 20
+Target runtime : 441, Function runtime : 20
+Target runtime : 431, Function runtime : 20
+Target runtime : 431, Function runtime : 20
+Target runtime : 801, Function runtime : 30
+Target runtime : 510, Function runtime : 20
+Target runtime : 451, Function runtime : 30
+Target runtime : 441, Function runtime : 20
+Target runtime : 1312, Function runtime : 20
+Target runtime : 1212, Function runtime : 20
+Target runtime : 541, Function runtime : 30
+Target runtime : 511, Function runtime : 30
+Target runtime : 461, Function runtime : 30
+Target runtime : 431, Function runtime : 20
+Target runtime : 471, Function runtime : 20
+Target runtime : 481, Function runtime : 20
+Target runtime : 441, Function runtime : 20
+Target runtime : 410, Function runtime : 30
+Target runtime : 1713, Function runtime : 30
+Target runtime : 1372, Function runtime : 30
+Target runtime : 1423, Function runtime : 31
+Target runtime : 491, Function runtime : 30
+Target runtime : 451, Function runtime : 20
+Target runtime : 482, Function runtime : 20
+Target runtime : 430, Function runtime : 29
+Target runtime : 671, Function runtime : 20
+Target runtime : 1172, Function runtime : 21
+Target runtime : 461, Function runtime : 30
+#806165	DONE   cov: 89 ft: 147 corp: 35/1217b lim: 4096 exec/s: 26005 rss: 55Mb
+###### Recommended dictionary. ######
+&#34;\377\377&#34; # Uses: 8561
+&#34;\001\000\000\000\000\000\000M&#34; # Uses: 7962
+&#34;\377\377\377\377&#34; # Uses: 8357
+&#34;\010\003\000\000\000\000\000\000&#34; # Uses: 7793
+&#34;\001\000\000\000\000\000\000\020&#34; # Uses: 7852
+&#34;\001\000\000\000\000\000\000\000&#34; # Uses: 7953
+&#34;\000\000\000\000\000\000\000\000&#34; # Uses: 7876
+&#34;\377\377\377\037&#34; # Uses: 8248
+&#34;\001\000&#34; # Uses: 8481
+###### End of recommended dictionary. ######
+Done 806165 runs in 31 second(s)
+stat::number_of_executed_units: 806165
+stat::average_exec_per_sec:     26005
+stat::new_units_added:          186
+stat::slowest_unit_time_sec:    0
+stat::peak_rss_mb:              55
+
+</pre>
+
+
+</body>

@@ -1,0 +1,34 @@
+LLVMFuzzerTestOneInput:
+   26|      3|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   27|      3|auto start_target = std::chrono::high_resolution_clock::now();
+   28|       |    // Create a FuzzedDataProvider instance
+   29|      3|    FuzzedDataProvider fuzzed_data(data, size);
+   30|       |    
+   31|       |    // Initialize GfxState with a size derived from the fuzz input
+   32|      3|    size_t gfx_state_size = fuzzed_data.ConsumeIntegralInRange<size_t>(1, 1024); // Ensure non-zero size
+   33|      3|    GfxState gfx_state(gfx_state_size);
+   34|       |
+   35|       |    // Fill the GfxState buffer with fuzzed data
+   36|      3|    size_t bytes_to_consume = std::min(fuzzed_data.remaining_bytes(), gfx_state.buffer.size());
+   37|      3|    std::vector<uint8_t> buffer_data = fuzzed_data.ConsumeBytes<uint8_t>(bytes_to_consume);
+   38|      3|    std::copy(buffer_data.begin(), buffer_data.end(), gfx_state.buffer.begin());
+   39|       |
+   40|       |    // Create an instance of SplashOutputDev
+   41|      3|    SplashOutputDev splash_output_dev;
+   42|       |
+   43|       |    // Call the function under test
+   44|      3|	auto start_func = std::chrono::high_resolution_clock::now();
+   45|      3|    splash_output_dev.doUpdateFont(&gfx_state);
+   46|      3|	auto end_func = std::chrono::high_resolution_clock::now();
+   47|      3|auto end_target = std::chrono::high_resolution_clock::now();
+   48|      3|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   49|       |
+   50|      3|    return 0;
+   51|      3|}
+_ZN8GfxStateC2Em:
+   13|      3|    GfxState(size_t size) : buffer(size) {}
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   21|      3|    void doUpdateFont(GfxState *state) {
+   22|       |        // Function implementation
+   23|      3|    }
+

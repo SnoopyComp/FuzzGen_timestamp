@@ -1,0 +1,77 @@
+LLVMFuzzerTestOneInput:
+   22|     60|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   23|     60|    if (size == 0) {
+  ------------------
+  |  Branch (23:9): [True: 0, False: 60]
+  ------------------
+   24|      0|        return 0; // Avoid processing if there's no input data
+   25|      0|    }
+   26|       |
+   27|     60|    FuzzedDataProvider stream(data, size);
+   28|       |
+   29|       |    // Create a GfxState object
+   30|     60|    GfxState gfxState;
+   31|       |
+   32|       |    // Consume doubles for coordinates and dimensions
+   33|     60|    double x = stream.ConsumeFloatingPoint<double>();
+   34|     60|    double y = stream.ConsumeFloatingPoint<double>();
+   35|     60|    double width = stream.ConsumeFloatingPoint<double>();
+   36|     60|    double height = stream.ConsumeFloatingPoint<double>();
+   37|     60|    double ascent = stream.ConsumeFloatingPoint<double>();
+   38|     60|    double descent = stream.ConsumeFloatingPoint<double>();
+   39|       |
+   40|       |    // Consume a CharCode
+   41|     60|    CharCode charCode = stream.ConsumeIntegral<CharCode>();
+   42|       |
+   43|       |    // Consume an integer for flags
+   44|     60|    int flags = stream.ConsumeIntegral<int>();
+   45|       |
+   46|       |    // Consume Unicode data
+   47|     60|    size_t unicodeLength = stream.ConsumeIntegralInRange<size_t>(1, 32); // Example range
+   48|     60|    std::string unicodeString = stream.ConsumeRandomLengthString(); // Get a random length string
+   49|       |
+   50|       |    // Ensure the length of the string is as expected
+   51|     60|    if (unicodeString.size() < unicodeLength) {
+  ------------------
+  |  Branch (51:9): [True: 38, False: 22]
+  ------------------
+   52|     38|        return 0; // Not enough data to proceed
+   53|     38|    }
+   54|       |
+   55|       |    // Convert the string to Unicode array
+   56|     22|    std::vector<Unicode> unicodeData(unicodeLength);
+   57|    216|    for (size_t i = 0; i < unicodeLength; ++i) {
+  ------------------
+  |  Branch (57:24): [True: 194, False: 22]
+  ------------------
+   58|    194|        unicodeData[i] = static_cast<Unicode>(unicodeString[i]); // Convert char to Unicode
+   59|    194|    }
+   60|     22|    Unicode *unicodePtr = unicodeData.data(); // Pointer to the Unicode data
+   61|       |
+   62|       |    // Consume GBool values
+   63|     22|    GBool isUnderlined = stream.ConsumeBool() ? 1 : 0;
+  ------------------
+  |  Branch (63:26): [True: 1, False: 21]
+  ------------------
+   64|     22|    GBool isBold = stream.ConsumeBool() ? 1 : 0;
+  ------------------
+  |  Branch (64:20): [True: 1, False: 21]
+  ------------------
+   65|     22|    GBool isItalic = stream.ConsumeBool() ? 1 : 0;
+  ------------------
+  |  Branch (65:22): [True: 1, False: 21]
+  ------------------
+   66|       |
+   67|       |    // Call the function under test
+   68|     22|    SplashOutputDev splashOutputDev;
+   69|     22|    splashOutputDev.drawChar(&gfxState, x, y, width, height, ascent, descent,
+   70|     22|                              charCode, flags, unicodePtr, static_cast<int>(unicodeLength),
+   71|     22|                              isUnderlined, isBold, isItalic);
+   72|       |
+   73|     22|    return 0;
+   74|     60|}
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddjiPjiiii:
+   17|     22|                  GBool isBold, GBool isItalic) {
+   18|       |        // Function implementation
+   19|     22|    }
+

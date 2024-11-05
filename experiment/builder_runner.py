@@ -785,6 +785,19 @@ class BuilderRunner:
   def add_timestamp(self,
                     generated_oss_fuzz_project: str,
                     target_path: str,):
+
+    define_header = "#include <chrono>//erase\n#ifndef iostream//erase\n#include <iostream>//erase\n#endif//erase\n"
+    define_variables = "int function_runtime = 0;//erase\n"
+    function_start = "auto start_func = std::chrono::high_resolution_clock::now();//erase\n"
+    function_end = "auto end_func = std::chrono::high_resolution_clock::now();//erase\n"
+    target_start = "auto start_target = std::chrono::high_resolution_clock::now();//erase\n"
+    target_end = "auto end_target = std::chrono::high_resolution_clock::now();//erase\n"
+    add_function_runtime = "function_runtime += (int)(std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count());//erase\n"
+    print_stamp = 'std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<function_runtime<<std::endl;//erase\n'
+
+
+
+
     fs = self.benchmark.function_signature.split("::")[-1]
     fs = fs[:fs.find("(")]
     logger.info(f"add_timestamp function has start-> {fs}, {generated_oss_fuzz_project} at {target_path}")
@@ -796,7 +809,7 @@ class BuilderRunner:
     
     sentence = "\n".join(lines)
 
-    if "#include <chrono>" in sentence:
+    if "//erase" in sentence:
       return
     
     for i in range(len(lines)):
@@ -805,25 +818,32 @@ class BuilderRunner:
     
     for i in range(len(lines)):
       if("#include <" in lines[i]):
-        lines.insert(i+1, "#include <chrono>\n#ifndef iostream\n#include <iostream>\n#endif\n")
+        lines.insert(i+1, define_header)
         break
-    for i in range(len(lines)):
+    i = 0
+    while i < len(lines):
       if(isMain and fs in lines[i].split('//')[0]):
+        lines.insert(i, function_start)
+        i += 1
         while(1):
-          if ";" or "return " in lines[i].split('//')[0] :
+          if ";" in lines[i].split('//')[0] :
             break
           i += 1
-        lines.insert(i+1, '\tauto end_func = std::chrono::high_resolution_clock::now();\n')
-        lines.insert(i, '\tauto start_func = std::chrono::high_resolution_clock::now();\n')
+        lines.insert(i+1, function_end)
+        i += 1
+        lines.insert(i+1, add_function_runtime)
+        i += 1
         get_function = True
-        break
       elif ("LLVMFuzzerTestOneInput" in lines[i].split('//')[0]):
-        lines.insert(i+1, 'auto start_target = std::chrono::high_resolution_clock::now();\n')
+        lines.insert(i+1, target_start)
+        i += 1
+        lines.insert(i+1, define_variables)
         isMain = True
+      i += 1
     for i in range(len(lines) - 1, -1, -1):
         if ("return 0" in lines[i]):
-            lines.insert(i - 1, 'std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;\n')
-            lines.insert(i - 1, 'auto end_target = std::chrono::high_resolution_clock::now();\n')
+            lines.insert(i - 1, print_stamp)
+            lines.insert(i - 1, target_end)
             break
     if(get_function):
       with open(target_path, 'w') as fn:

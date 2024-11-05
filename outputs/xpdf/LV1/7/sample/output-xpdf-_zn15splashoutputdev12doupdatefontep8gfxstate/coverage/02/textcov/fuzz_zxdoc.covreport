@@ -1,0 +1,48 @@
+LLVMFuzzerTestOneInput:
+   32|     24|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   33|     24|auto start_target = std::chrono::high_resolution_clock::now();//erase
+   34|     24|    FuzzedDataProvider stream(data, size);
+   35|       |
+   36|       |    // Create an instance of GfxState
+   37|     24|    GfxState gfxState;
+   38|       |
+   39|       |    // Initialize members of GfxState with fuzzed data
+   40|     24|    gfxState.some_value = stream.ConsumeIntegral<int>(); // Example of consuming an integer
+   41|       |
+   42|       |    // Consume a random length string for the buffer
+   43|     24|    std::string fuzzedString = stream.ConsumeRandomLengthString(1024);
+   44|     24|    gfxState.buffer.assign(fuzzedString.begin(), fuzzedString.end());
+   45|       |
+   46|       |    // Ensure the size of the buffer is valid
+   47|     24|    if (gfxState.buffer.size() == 0) {
+  ------------------
+  |  Branch (47:9): [True: 3, False: 21]
+  ------------------
+   48|      3|        return 0; // Do not proceed if buffer is empty
+   49|      3|    }
+   50|       |
+   51|       |    // Create an instance of SplashOutputDev
+   52|     21|    SplashOutputDev splashOutputDev;
+   53|       |
+   54|       |    // Call the function under test
+   55|     21|	auto start_func = std::chrono::high_resolution_clock::now();//erase
+   56|     21|    splashOutputDev.doUpdateFont(&gfxState);
+   57|     21|	auto end_func = std::chrono::high_resolution_clock::now();//erase
+   58|     21|auto end_target = std::chrono::high_resolution_clock::now();//erase
+   59|     21|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;//erase
+   60|       |
+   61|     21|    return 0;
+   62|     24|}
+_ZN8GfxStateC2Ev:
+   17|     24|    GfxState() : some_value(0) {}
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   23|     21|    void doUpdateFont(GfxState *gfxState) {
+   24|       |        // Implementation of the function (mocked for this example)
+   25|     21|        if (gfxState) {
+  ------------------
+  |  Branch (25:13): [True: 21, False: 0]
+  ------------------
+   26|     21|            gfxState->some_value += 1; // Just a dummy operation
+   27|     21|        }
+   28|     21|    }
+

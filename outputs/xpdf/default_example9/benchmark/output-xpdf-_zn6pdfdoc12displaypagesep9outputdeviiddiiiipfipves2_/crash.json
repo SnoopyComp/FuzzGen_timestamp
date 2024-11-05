@@ -1,0 +1,45 @@
+{
+    "samples": [
+
+    {
+        "benchmark": "output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_",
+        "sample": "01",
+        "status": "Done",
+        "compiles": "False",
+        "crashes": "False",
+        "crash_reason": "-",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "0.00",
+        "coverage_diff": "0.0",
+        "coverage_report": "#",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <vector>\\n#include <cstdint>\\n#include <string> // Include for std::string\\n#include \"/src/xpdf-4.05/xpdf/PDFDoc.h\" // Correct path for PDFDoc\\n#include \"/src/xpdf-4.05/xpdf/OutputDev.h\" // Include the header for OutputDev\\n#include \"/src/xpdf-4.05/xpdf/GString.h\" // Include the header for GString\\n#include <cstring> // Include for std::memcpy\\n\\nint LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\n    // Initialize FuzzedDataProvider with the input data\\n    FuzzedDataProvider fuzzed_data(data, size);\\n\\n    // Prepare parameters for the function call\\n    // Ensure we have enough bytes to create an OutputDev object\\n    if (size < sizeof(OutputDev)) return 0;\\n    auto output_dev_bytes = fuzzed_data.ConsumeBytes<uint8_t>(sizeof(OutputDev));\\n    if (output_dev_bytes.size() != sizeof(OutputDev)) return 0;\\n    OutputDev* output_dev = reinterpret_cast<OutputDev*>(output_dev_bytes.data());\\n\\n    int page_start = fuzzed_data.ConsumeIntegralInRange<int>(1, 100); // Assuming page numbers start at 1\\n    int page_end = fuzzed_data.ConsumeIntegralInRange<int>(page_start, 100); // Ensure end is >= start\\n    double x = fuzzed_data.ConsumeFloatingPoint<double>();\\n    double y = fuzzed_data.ConsumeFloatingPoint<double>();\\n    int zoom = fuzzed_data.ConsumeIntegral<int>();\\n    GBool flag1 = fuzzed_data.ConsumeBool() ? gTrue : gFalse; // Assuming GBool is a type with gTrue and gFalse\\n    GBool flag2 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;\\n    GBool flag3 = fuzzed_data.ConsumeBool() ? gTrue : gFalse;\\n\\n    // Removed the creation of DW_TAG_subroutine_typeInfinite object as its header is not available\\n    // Instead, we will use a pointer of type void* for the parameter\\n    void* infinite_loop = nullptr; // Placeholder for the infinite loop parameter\\n\\n    // Prepare a pointer for the last parameter\\n    // Use ConsumeRemainingBytes to ensure we have valid data\\n    auto user_data_bytes = fuzzed_data.ConsumeRemainingBytes<uint8_t>();\\n    void* user_data = user_data_bytes.data();\\n\\n    // Create a dummy GString for PDFDoc instantiation\\n    std::string random_string = fuzzed_data.ConsumeRandomLengthString();\\n    GString dummy_string(random_string.c_str()); // Construct GString from a C-style string\\n\\n    // Call the function under test\\n    pdf_doc.displayPages(output_dev, page_start, page_end, x, y, zoom, flag1, flag2, flag3, infinite_loop, user_data);\\n\\n    return 0;\\n}",
+        "model": ""
+    },
+
+    {
+        "benchmark": "output-xpdf-_zn6pdfdoc12displaypagesep9outputdeviiddiiiipfipves2_",
+        "sample": "02",
+        "status": "Done",
+        "compiles": "False",
+        "crashes": "False",
+        "crash_reason": "-",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "0.00",
+        "coverage_diff": "0.0",
+        "coverage_report": "#",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <vector>\\n#include <cstdint>\\n#include <iostream> // For debugging purposes if needed\\n#include \"/src/xpdf-4.05/xpdf/PDFDoc.h\" // Correct header for PDFDoc\\n#include \"/src/xpdf-4.05/xpdf/OutputDev.h\" // Assuming this is the correct header for OutputDev\\n#include \"/src/xpdf-4.05/goo/gmem.h\" // Assuming this is the correct header for GBool\\n#include \"/src/xpdf-4.05/xpdf/Gfx.h\" // Replacing the non-existent DW_TAG.h with Gfx.h\\n#include \"/src/xpdf-4.05/goo/GString.h\" // Include GString for PDFDoc constructor\\n\\n// Define a concrete class that inherits from OutputDev to implement the pure virtual methods\\nclass MyOutputDev : public OutputDev {\\npublic:\\n    GBool upsideDown() override { return GBool(0); }\\n    GBool useDrawChar() override { return GBool(0); }\\n    GBool interpretType3Chars() override { return GBool(0); }\\n    // Implement other pure virtual methods as needed\\n};\\n\\nint LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\n    FuzzedDataProvider stream(data, size);\\n\\n    // Create an OutputDev instance\\n    MyOutputDev outputDev; // Use the concrete class\\n\\n    // Consume integers\\n    int pageStart = stream.ConsumeIntegral<int>();\\n    int pageEnd = stream.ConsumeIntegral<int>();\\n\\n    // Consume doubles\\n    double xPos = stream.ConsumeFloatingPoint<double>();\\n    double yPos = stream.ConsumeFloatingPoint<double>();\\n\\n    // Consume an integer for some setting\\n    int someSetting = stream.ConsumeIntegral<int>();\\n\\n    // Consume boolean values\\n    GBool bool1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool is an integer type\\n    GBool bool2 = stream.ConsumeBool() ? 1 : 0;\\n    GBool bool3 = stream.ConsumeBool() ? 1 : 0;\\n\\n    // Consume a string for file name\\n    auto fileName = stream.ConsumeRandomLengthString(256); // Limit the length to avoid overflow\\n    GString gFileName(reinterpret_cast<char*>(fileName.data()), fileName.size()); // Create GString from consumed data\\n\\n    // Create a PDFDoc instance\\n    PDFDoc pdfDoc(&gFileName); // Pass the GString to the constructor\\n\\n    // Call the function-under-test\\n    pdfDoc.displayPages(&outputDev, pageStart, pageEnd, xPos, yPos, someSetting, bool1, bool2, bool3, nullptr, nullptr);\\n\\n    return 0;\\n}",
+        "model": ""
+    }
+
+    ]
+}

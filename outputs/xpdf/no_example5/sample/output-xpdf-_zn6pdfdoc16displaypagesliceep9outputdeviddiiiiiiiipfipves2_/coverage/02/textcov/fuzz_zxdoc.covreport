@@ -1,0 +1,52 @@
+LLVMFuzzerTestOneInput:
+   81|      2|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   82|      2|auto start_target = std::chrono::high_resolution_clock::now();
+   83|      2|    FuzzedDataProvider stream(data, size);
+   84|       |
+   85|       |    // Initialize parameters
+   86|      2|    MyOutputDev outputDevice; // Use the concrete subclass
+   87|      2|    int pageIndex = stream.ConsumeIntegral<int>();
+   88|      2|    double x1 = stream.ConsumeFloatingPoint<double>();
+   89|      2|    double y1 = stream.ConsumeFloatingPoint<double>();
+   90|      2|    int width = stream.ConsumeIntegral<int>();
+   91|      2|    GBool useCache = stream.ConsumeBool();
+   92|      2|    GBool renderAnnotations = stream.ConsumeBool();
+   93|      2|    GBool renderText = stream.ConsumeBool();
+   94|      2|    int rotation = stream.ConsumeIntegral<int>();
+   95|      2|    int pageCount = stream.ConsumeIntegral<int>();
+   96|      2|    int pageWidth = stream.ConsumeIntegral<int>();
+   97|      2|    int pageHeight = stream.ConsumeIntegral<int>();
+   98|       |    
+   99|       |    // Create a user data pointer
+  100|      2|    auto userDataData = stream.ConsumeRandomLengthString(16); // Assuming 16 bytes for user data
+  101|      2|    if (userDataData.size() != 16) {
+  ------------------
+  |  Branch (101:9): [True: 2, False: 0]
+  ------------------
+  102|      2|        return 0; // Invalid data, skip this input
+  103|      2|    }
+  104|      0|    void *userData = reinterpret_cast<void*>(const_cast<char*>(userDataData.data()));
+  105|       |
+  106|       |    // Create a temporary PDF file
+  107|      0|    std::string tempFileName = "temp.pdf";
+  108|      0|    createTemporaryPDF(tempFileName);
+  109|       |
+  110|       |    // Create a valid PDFDoc instance
+  111|      0|    GString fileName(tempFileName.c_str()); // Use the temporary file name
+  112|      0|    PDFDoc pdfDoc(&fileName); // Assuming this constructor is valid
+  113|       |
+  114|       |    // Call the function under test
+  115|      0|	auto start_func = std::chrono::high_resolution_clock::now();
+  116|      0|    displayPageSliceWrapper(pdfDoc, &outputDevice, pageIndex, x1, y1, width, useCache, renderAnnotations, renderText, rotation, pageCount, pageWidth, pageHeight, abortCheckCallback, userData);
+  117|      0|	auto end_func = std::chrono::high_resolution_clock::now();
+  118|      0|auto end_target = std::chrono::high_resolution_clock::now();
+  119|      0|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+  120|       |
+  121|      0|    return 0;
+  122|      2|}
+
+_ZN9OutputDevC2Ev:
+   39|      2|  OutputDev() {}
+_ZN9OutputDevD2Ev:
+   42|      2|  virtual ~OutputDev() {}
+

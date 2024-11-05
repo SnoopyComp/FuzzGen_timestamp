@@ -1,0 +1,53 @@
+LLVMFuzzerTestOneInput:
+   36|     16|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   37|     16|auto start_target = std::chrono::high_resolution_clock::now();
+   38|       |    // Create a FuzzedDataProvider instance
+   39|     16|    FuzzedDataProvider fuzzed_data(data, size);
+   40|       |
+   41|       |    // Initialize GfxState
+   42|     16|    GfxState gfxState;
+   43|     16|    gfxState.some_member = fuzzed_data.ConsumeIntegral<int>(); // Example initialization
+   44|     16|    gfxState.another_member = fuzzed_data.ConsumeFloatingPoint<float>(); // Initialize another member
+   45|       |
+   46|       |    // Consume a vector of integers for more complex input
+   47|     16|    int vector_size = fuzzed_data.ConsumeIntegralInRange<int>(1, 10); // Random size between 1 and 10
+   48|     16|    gfxState.data_vector.reserve(vector_size);
+   49|     58|    for (int i = 0; i < vector_size; ++i) {
+  ------------------
+  |  Branch (49:21): [True: 42, False: 16]
+  ------------------
+   50|     42|        gfxState.data_vector.push_back(fuzzed_data.ConsumeIntegral<int>());
+   51|     42|    }
+   52|       |
+   53|       |    // Call the function to fuzz
+   54|     16|    SplashOutputDev splashOutputDev;
+   55|     16|	auto start_func = std::chrono::high_resolution_clock::now();
+   56|     16|    splashOutputDev.doUpdateFont(&gfxState);
+   57|     16|	auto end_func = std::chrono::high_resolution_clock::now();
+   58|     16|auto end_target = std::chrono::high_resolution_clock::now();
+   59|     16|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   60|       |
+   61|     16|    return 0;
+   62|     16|}
+_ZN8GfxStateC2Ev:
+   17|     16|    GfxState() : some_member(0), another_member(0.0f) {}
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   22|     16|    void doUpdateFont(GfxState *gfxState) {
+   23|       |        // Implementation of the function
+   24|       |        // Example usage of GfxState members
+   25|     16|        if (gfxState->some_member > 0) {
+  ------------------
+  |  Branch (25:13): [True: 5, False: 11]
+  ------------------
+   26|       |            // Simulate some processing based on the state
+   27|      5|            gfxState->another_member += static_cast<float>(gfxState->some_member) * 0.1f;
+   28|      5|        }
+   29|       |        // Example of using the vector
+   30|     42|        for (int value : gfxState->data_vector) {
+  ------------------
+  |  Branch (30:24): [True: 42, False: 16]
+  ------------------
+   31|     42|            gfxState->another_member += value * 0.5f;
+   32|     42|        }
+   33|     16|    }
+

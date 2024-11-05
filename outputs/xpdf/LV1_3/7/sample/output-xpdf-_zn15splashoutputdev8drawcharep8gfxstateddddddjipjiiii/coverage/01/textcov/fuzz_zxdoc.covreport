@@ -1,0 +1,70 @@
+LLVMFuzzerTestOneInput:
+   49|     58|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   50|     58|auto start_target = std::chrono::high_resolution_clock::now();//erase
+   51|     58|    FuzzedDataProvider stream(data, size);
+   52|       |
+   53|       |    // Create an instance of SplashOutputDev
+   54|     58|    SplashOutputDev splashOutputDev;
+   55|       |
+   56|       |    // Create a GfxState object
+   57|     58|    GfxState gfxState;
+   58|       |
+   59|       |    // Use the fuzzed data to influence the GfxState
+   60|     58|    int fontSize = stream.ConsumeIntegralInRange<int>(1, 100); // Random font size between 1 and 100
+   61|     58|    gfxState.setFontSize(fontSize);
+   62|       |
+   63|       |    // Consume a string from the fuzzed data for the font name
+   64|     58|    std::string fontName = stream.ConsumeRandomLengthString(49); // Max length 49 to fit in the buffer
+   65|     58|    gfxState.setFontName(fontName.c_str());
+   66|       |
+   67|       |    // Prepare parameters for drawChar
+   68|     58|    double x = stream.ConsumeFloatingPoint<double>(); // X coordinate
+   69|     58|    double y = stream.ConsumeFloatingPoint<double>(); // Y coordinate
+   70|     58|    double width = stream.ConsumeFloatingPoint<double>(); // Width
+   71|     58|    double height = stream.ConsumeFloatingPoint<double>(); // Height
+   72|     58|    double dx = stream.ConsumeFloatingPoint<double>(); // Delta X
+   73|     58|    double dy = stream.ConsumeFloatingPoint<double>(); // Delta Y
+   74|     58|    CharCode charCode = stream.ConsumeIntegral<CharCode>(); // CharCode
+   75|     58|    int unicodeCount = stream.ConsumeIntegralInRange<int>(1, 10); // Unicode count
+   76|     58|    std::vector<Unicode> unicodeArray(unicodeCount); // Unicode array
+   77|    156|    for (int i = 0; i < unicodeCount; ++i) {
+  ------------------
+  |  Branch (77:21): [True: 98, False: 58]
+  ------------------
+   78|     98|        unicodeArray[i] = stream.ConsumeIntegral<Unicode>(); // Fill the Unicode array
+   79|     98|    }
+   80|     58|    GBool fill = stream.ConsumeBool(); // Fill flag
+   81|     58|    GBool stroke = stream.ConsumeBool(); // Stroke flag
+   82|     58|    GBool clip = stream.ConsumeBool(); // Clip flag
+   83|       |
+   84|       |    // Call the function under test
+   85|     58|	auto start_func = std::chrono::high_resolution_clock::now();//erase
+   86|     58|    splashOutputDev.drawChar(&gfxState, x, y, width, height, dx, dy, charCode, fontSize, unicodeArray.data(), unicodeCount, fill, stroke, clip);
+   87|     58|	auto end_func = std::chrono::high_resolution_clock::now();//erase
+   88|     58|auto end_target = std::chrono::high_resolution_clock::now();//erase
+   89|     58|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;//erase
+   90|       |
+   91|     58|    return 0;
+   92|     58|}
+_ZN8GfxStateC2Ev:
+   19|     58|    GfxState() {
+   20|       |        // Initialize members
+   21|     58|        fontSize = 12; // Default font size
+   22|     58|        memset(fontName, 0, sizeof(fontName)); // Clear font name
+   23|     58|    }
+_ZN8GfxState11setFontSizeEi:
+   25|     58|    void setFontSize(int size) {
+   26|     58|        fontSize = size;
+   27|     58|    }
+_ZN8GfxState11setFontNameEPKc:
+   29|     58|    void setFontName(const char* name) {
+   30|     58|        strncpy(fontName, name, sizeof(fontName) - 1);
+   31|     58|        fontName[sizeof(fontName) - 1] = '\0'; // Ensure null-termination
+   32|     58|    }
+_ZN15SplashOutputDev8drawCharEP8GfxStateddddddjiPjibbb:
+   41|     58|    void drawChar(GfxState *state, double x, double y, double width, double height, double dx, double dy, CharCode charCode, int fontSize, Unicode *unicode, int unicodeCount, GBool fill, GBool stroke, GBool clip) {
+   42|       |        // Implementation of drawChar (omitted for brevity)
+   43|       |        // For example, just printing the state (in a real implementation, this would do something meaningful)
+   44|     58|        printf("Drawing char %u at (%f, %f) with size %d\n", charCode, x, y, fontSize);
+   45|     58|    }
+

@@ -1,0 +1,46 @@
+LLVMFuzzerTestOneInput:
+   30|     36|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+   31|     36|auto start_target = std::chrono::high_resolution_clock::now();
+   32|     36|    FuzzedDataProvider stream(data, size);
+   33|       |
+   34|       |    // Create an instance of GfxState
+   35|     36|    GfxState gfxState;
+   36|       |
+   37|       |    // Initialize gfxState with fuzzed data
+   38|     36|    gfxState.some_int = stream.ConsumeIntegral<int>();
+   39|     36|    gfxState.some_float = stream.ConsumeFloatingPoint<float>();
+   40|       |
+   41|       |    // Consume a random length of bytes for the data_buffer
+   42|     36|    size_t buffer_size = stream.ConsumeIntegralInRange<size_t>(1, 256); // Ensure non-zero size
+   43|     36|    std::string consumed_string = stream.ConsumeRandomLengthString();
+   44|       |    
+   45|       |    // Validate the size of the consumed string
+   46|     36|    if (consumed_string.size() != buffer_size) {
+  ------------------
+  |  Branch (46:9): [True: 26, False: 10]
+  ------------------
+   47|     26|        return 0; // Size mismatch, do not proceed
+   48|     26|    }
+   49|       |    
+   50|     10|    gfxState.data_buffer = std::vector<uint8_t>(consumed_string.begin(), consumed_string.end());
+   51|       |
+   52|       |    // Create an instance of SplashOutputDev
+   53|     10|    SplashOutputDev splashOutputDev;
+   54|       |
+   55|       |    // Call the function under test
+   56|     10|	auto start_func = std::chrono::high_resolution_clock::now();
+   57|     10|    splashOutputDev.doUpdateFont(&gfxState);
+   58|     10|	auto end_func = std::chrono::high_resolution_clock::now();
+   59|     10|auto end_target = std::chrono::high_resolution_clock::now();
+   60|     10|std::cout<<"Target runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_target-start_target).count()<<", Function runtime : "<<std::chrono::duration_cast<std::chrono::nanoseconds>(end_func - start_func).count()<<std::endl;
+   61|       |
+   62|     10|    return 0;
+   63|     36|}
+_ZN8GfxStateC2Ev:
+   18|     36|    GfxState() : some_int(0), some_float(0.0f) {}
+_ZN15SplashOutputDev12doUpdateFontEP8GfxState:
+   24|     10|    void doUpdateFont(GfxState *gfxState) {
+   25|       |        // Function implementation
+   26|       |        // This is where the actual processing would occur
+   27|     10|    }
+

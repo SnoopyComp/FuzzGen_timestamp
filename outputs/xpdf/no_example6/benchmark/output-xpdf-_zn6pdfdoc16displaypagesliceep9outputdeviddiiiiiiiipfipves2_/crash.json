@@ -1,0 +1,45 @@
+{
+    "samples": [
+
+    {
+        "benchmark": "output-xpdf-_zn6pdfdoc16displaypagesliceep9outputdeviddiiiiiiiipfipves2_",
+        "sample": "01",
+        "status": "Done",
+        "compiles": "False",
+        "crashes": "False",
+        "crash_reason": "-",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "0.00",
+        "coverage_diff": "0.0",
+        "coverage_report": "#",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <cstdint>\\n#include <vector>\\n#include <string> // Include for std::string\\n#include \"/src/xpdf-4.05/goo/GString.h\" // Corrected include for GString header\\n#include \"/src/xpdf-4.05/xpdf/PDFDoc.h\" // Assuming these headers exist\\n#include \"/src/xpdf-4.05/xpdf/OutputDev.h\"\\n\\nint LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\n    FuzzedDataProvider stream(data, size);\\n\\n    // Validate the size of the data for OutputDev\\n    std::vector<uint8_t> outputDevData = stream.ConsumeBytes<uint8_t>(sizeof(OutputDev));\\n    if (outputDevData.size() != sizeof(OutputDev)) {\\n        return 0; // Not enough data, exit early\\n    }\\n    OutputDev* outputDev = reinterpret_cast<OutputDev*>(outputDevData.data());\\n\\n    // Initialize parameters for the function call\\n    int pageNumber = stream.ConsumeIntegral<int>();\\n    double x1 = stream.ConsumeFloatingPoint<double>();\\n    double y1 = stream.ConsumeFloatingPoint<double>();\\n    int x2 = stream.ConsumeIntegral<int>();\\n    int flag1 = stream.ConsumeBool() ? 1 : 0; // Assuming GBool can be represented as 0 or 1\\n    int flag2 = stream.ConsumeBool() ? 1 : 0;\\n    int flag3 = stream.ConsumeBool() ? 1 : 0;\\n    int rotation = stream.ConsumeIntegral<int>();\\n    int width = stream.ConsumeIntegral<int>();\\n    int height = stream.ConsumeIntegral<int>();\\n    int cropX = stream.ConsumeIntegral<int>();\\n    int cropY = stream.ConsumeIntegral<int>();\\n\\n    // Use ConsumeRandomLengthString to create a buffer for additional data\\n    std::string additionalDataStr = stream.ConsumeRandomLengthString(100); // Adjust length as needed\\n    void* additionalData = reinterpret_cast<void*>(const_cast<char*>(additionalDataStr.data()));\\n\\n    // Create a GString for the PDFDoc constructor\\n    GString *fileNameA = new GString(\"dummy.pdf\"); // Use a dummy filename for testing\\n\\n    // Call the constructor with the required parameters\\n    PDFDoc pdfDoc(fileNameA); // Create PDFDoc with a GString\\n\\n    // Call the function under test\\n    pdfDoc.displayPageSlice(outputDev, pageNumber, x1, y1, x2, rotation, flag1, flag2, flag3, width, height, cropX, cropY, nullptr, additionalData); // Adjusted parameters to match function signature\\n\\n    // Clean up\\n    delete fileNameA; // Clean up allocated GString\\n\\n    return 0;\\n}",
+        "model": ""
+    },
+
+    {
+        "benchmark": "output-xpdf-_zn6pdfdoc16displaypagesliceep9outputdeviddiiiiiiiipfipves2_",
+        "sample": "02",
+        "status": "Done",
+        "compiles": "False",
+        "crashes": "False",
+        "crash_reason": "-",
+        "bug": "True",
+        "triage": "-",
+        "coverage": "0.00",
+        "coverage_diff": "0.0",
+        "coverage_report": "/sample/output-xpdf-_zn6pdfdoc16displaypagesliceep9outputdeviddiiiiiiiipfipves2_/coverage/02/linux/report.html",
+        "stacktrace": "/stacktrace",
+        "target_binary": "/target_binary",
+        "reproducer": "/artifacts",
+        "run_log": "run.log",
+        "source_code": "#include <fuzzer/FuzzedDataProvider.h>\\n#include <vector>\\n#include <cstdint>\\n#include <cstring>\\n#include <string>\\n\\n// Include necessary headers for PDFDoc and OutputDev\\n#include \"PDFDoc.h\"\\n#include \"OutputDev.h\"\\n\\n// Mock definitions for GBool and DW_TAG_subroutine_type\\n// Use the correct definition for GBool from gtypes.h\\ntypedef int GBool; // Changed from bool to int to match the original definition\\nstruct DW_TAG_subroutine_type {};\\n\\n// The function to be fuzzed\\n// Remove the out-of-line declaration and define the function inline\\nvoid displayPageSlice(OutputDev *, int, double, double, int, GBool, GBool, GBool, int, int, int, int, GBool (*)(void *), void *);\\n\\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\\n    FuzzedDataProvider fuzzed_data(data, size);\\n\\n    // Initialize parameters for the function\\n    std::string output_dev_data = fuzzed_data.ConsumeRandomLengthString(100); // Use a string to get random length data\\n    OutputDev* output_dev = new OutputDev(); // Properly allocate OutputDev\\n\\n    int param1 = fuzzed_data.ConsumeIntegral<int>();\\n    double param2 = fuzzed_data.ConsumeFloatingPoint<double>();\\n    double param3 = fuzzed_data.ConsumeFloatingPoint<double>();\\n    int param4 = fuzzed_data.ConsumeIntegral<int>();\\n    GBool param5 = fuzzed_data.ConsumeBool();\\n    GBool param6 = fuzzed_data.ConsumeBool();\\n    GBool param7 = fuzzed_data.ConsumeBool();\\n    int param8 = fuzzed_data.ConsumeIntegral<int>();\\n    int param9 = fuzzed_data.ConsumeIntegral<int>();\\n    int param10 = fuzzed_data.ConsumeIntegral<int>();\\n    int param11 = fuzzed_data.ConsumeIntegral<int>();\\n    \\n    // Instead of DW_TAG_subroutine_type, we need to pass a function pointer of type GBool (*)(void *)\\n    GBool (*param12)(void *) = nullptr; // Set to nullptr or you can create a mock function if needed\\n    \\n    // Using remaining bytes as a void pointer\\n    // Allocate memory for the remaining bytes to avoid dangling pointer issue\\n    size_t remaining_size = fuzzed_data.remaining_bytes();\\n    void* param13 = malloc(remaining_size);\\n    if (param13) {\\n        memcpy(param13, fuzzed_data.ConsumeRemainingBytes<uint8_t>().data(), remaining_size);\\n    }\\n\\n    // To create a valid PDFDoc, we need to provide a valid GString or char* as per the constructor\\n    std::string fileName = fuzzed_data.ConsumeRandomLengthString(100); // Simulating a file name input\\n    GString* gStringFileName = new GString(fileName.c_str()); // Create a GString from the file name\\n\\n    PDFDoc pdf_doc(gStringFileName); // Using a constructor that takes a GString*\\n\\n    // Call the function under test\\n    pdf_doc.displayPageSlice(output_dev, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13);\\n\\n    delete gStringFileName; // Clean up allocated GString\\n    free(param13); // Free allocated memory for param13\\n    delete output_dev; // Clean up allocated OutputDev\\n\\n    return 0;\\n}",
+        "model": ""
+    }
+
+    ]
+}
